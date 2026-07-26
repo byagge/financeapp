@@ -9,12 +9,19 @@ import * as schema from "./schema";
 const dataDir = path.join(process.cwd(), "data");
 const dbPath = path.join(dataDir, "finance.db");
 
+type AppDb = ReturnType<typeof drizzle<typeof schema>>;
+
 type GlobalDb = {
   sqlite?: Database.Database;
+  drizzle?: AppDb;
   migrated?: boolean;
 };
 
 const globalForDb = globalThis as unknown as GlobalDb;
+
+function isBuildPhase() {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
 
 function columnExists(sqlite: Database.Database, table: string, column: string) {
   const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
@@ -70,37 +77,46 @@ function ensureSchema(sqlite: Database.Database) {
     sqlite.exec(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'`);
   }
 
-  if (!globalForDb.migrated) {
+  if (!isBuildPhase() && !globalForDb.migrated) {
     ensureAdmin(sqlite);
     globalForDb.migrated = true;
   }
 }
 
 function ensureAdmin(sqlite: Database.Database) {
-  const admin = sqlite
-    .prepare(`SELECT id FROM users WHERE role = 'admin' LIMIT 1`)
-    .get() as { id: string } | undefined;
-  if (admin) return;
-
   const email = (process.env.ADMIN_EMAIL || "admin@finance.local").toLowerCase().trim();
   const password = process.env.ADMIN_PASSWORD || "admin1234";
   const name = process.env.ADMIN_NAME || "Admin";
 
   const existing = sqlite
-    .prepare(`SELECT id FROM users WHERE email = ?`)
-    .get(email) as { id: string } | undefined;
+    .prepare(`SELECT id, role FROM users WHERE email = ?`)
+    .get(email) as { id: string; role: string } | undefined;
 
   if (existing) {
-    sqlite.prepare(`UPDATE users SET role = 'admin' WHERE id = ?`).run(existing.id);
+    if (existing.role !== "admin") {
+      sqlite.prepare(`UPDATE users SET role = 'admin' WHERE id = ?`).run(existing.id);
+    }
     return;
   }
 
-  sqlite
-    .prepare(
-      `INSERT INTO users (id, name, email, password_hash, role, locale, created_at)
-       VALUES (?, ?, ?, ?, 'admin', 'ru', ?)`
-    )
-    .run(nanoid(), name, email, hashSync(password, 10), new Date().toISOString());
+  const admin = sqlite
+    .prepare(`SELECT id FROM users WHERE role = 'admin' LIMIT 1`)
+    .get() as { id: string } | undefined;
+  if (admin) return;
+
+  try {
+    sqlite
+      .prepare(
+        `INSERT INTO users (id, name, email, password_hash, role, locale, created_at)
+         VALUES (?, ?, ?, ?, 'admin', 'ru', ?)`
+      )
+      .run(nanoid(), name, email, hashSync(password, 10), new Date().toISOString());
+  } catch (err) {
+    // Parallel Next.js build workers may race on first insert.
+    const code = err && typeof err === "object" && "code" in err ? String(err.code) : "";
+    if (code.includes("CONSTRAINT") || String(err).includes("UNIQUE")) return;
+    throw err;
+  }
 }
 
 function createConnection() {
@@ -125,4 +141,20 @@ function getSqlite() {
   return globalForDb.sqlite;
 }
 
-export const db = drizzle(getSqlite(), { schema });
+function getDb(): AppDb {
+  if (!globalForDb.drizzle) {
+    globalForDb.drizzle = drizzle(getSqlite(), { schema });
+  }
+  return globalForDb.drizzle;
+}
+
+/** Lazy DB: avoid opening SQLite while Next.js build workers collect page data. */
+export const db: AppDb = new Proxy({} as AppDb, {
+  get(_target, prop, receiver) {
+    const instance = getDb();
+    const value = Reflect.get(instance as object, prop, receiver);
+    return typeof value === "function"
+      ? (value as (...args: unknown[]) => unknown).bind(instance)
+      : value;
+  },
+});
