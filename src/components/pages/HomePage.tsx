@@ -9,13 +9,14 @@ import { BalanceCard } from "@/components/mobile/BalanceCard";
 import { QuickActions } from "@/components/mobile/QuickActions";
 import { TransactionList } from "@/components/mobile/TransactionList";
 import { TransactionTable } from "@/components/desktop/TransactionTable";
+import { FullScreenLoader } from "@/components/shared/FullScreenLoader";
 import { useTransactions } from "@/hooks/useFinance";
 import { formatHeaderDate, getPeriodRange, greetingKey, type Period } from "@/lib/period";
 
 export function HomePage() {
   const t = useTranslations("home");
   const locale = useLocale() as "ru" | "uz";
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [period, setPeriod] = useState<Period>("day");
   const range = getPeriodRange(period);
   const { data, isLoading } = useTransactions({ from: range.from, to: range.to });
@@ -33,8 +34,14 @@ export function HomePage() {
           ? t("greetingEvening")
           : t("greetingNight");
 
+  const booting = status === "loading" || (isLoading && !data);
+
+  if (booting) {
+    return <FullScreenLoader />;
+  }
+
   return (
-    <div className="space-y-5 pb-4">
+    <div className="space-y-5 pb-4 animate-fade-in">
       <header className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-11 h-11 rounded-full bg-[#EEECFF] text-[#4A3AFF] flex items-center justify-center shrink-0">
@@ -74,11 +81,7 @@ export function HomePage() {
       </div>
 
       <div className="lg:hidden">
-        {isLoading ? (
-          <div className="py-10 text-center text-[#9CA3AF] text-sm">…</div>
-        ) : (
-          <TransactionList items={items.slice(0, 6)} />
-        )}
+        <TransactionList items={items.slice(0, 6)} />
       </div>
 
       <div className="hidden lg:block">

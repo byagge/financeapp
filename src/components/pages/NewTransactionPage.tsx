@@ -104,7 +104,7 @@ export function NewTransactionPage() {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] max-w-xl mx-auto overflow-hidden">
+    <div className="flex flex-col max-w-xl mx-auto pb-6">
       <div className="flex bg-[#EEF0F5] rounded-full p-1 shrink-0">
         {(["income", "expense"] as TxType[]).map((tab) => {
           const active = type === tab;
@@ -225,7 +225,7 @@ export function NewTransactionPage() {
           setError("");
           mutation.mutate();
         }}
-        className="mt-auto w-full rounded-full py-3.5 font-semibold text-white bg-[#4A3AFF] shadow-[0_10px_24px_rgba(74,58,255,0.35)] disabled:opacity-60 shrink-0"
+        className="mt-4 mb-1 w-full rounded-full py-3.5 font-semibold text-white bg-[#4A3AFF] shadow-[0_10px_24px_rgba(74,58,255,0.35)] disabled:opacity-60 shrink-0"
       >
         {mutation.isPending ? "…" : t("addAction")}
       </button>
