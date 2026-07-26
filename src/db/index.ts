@@ -1,0 +1,128 @@
+import Database from "better-sqlite3";
+import { hashSync } from "bcryptjs";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import fs from "fs";
+import path from "path";
+import { nanoid } from "nanoid";
+import * as schema from "./schema";
+
+const dataDir = path.join(process.cwd(), "data");
+const dbPath = path.join(dataDir, "finance.db");
+
+type GlobalDb = {
+  sqlite?: Database.Database;
+  migrated?: boolean;
+};
+
+const globalForDb = globalThis as unknown as GlobalDb;
+
+function columnExists(sqlite: Database.Database, table: string, column: string) {
+  const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  return cols.some((c) => c.name === column);
+}
+
+function ensureSchema(sqlite: Database.Database) {
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user',
+      locale TEXT NOT NULL DEFAULT 'ru',
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS people (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      avatar_color TEXT NOT NULL DEFAULT '#5B8A7A',
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS transactions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      person_id TEXT REFERENCES people(id) ON DELETE SET NULL,
+      category_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
+      name TEXT NOT NULL,
+      income REAL NOT NULL DEFAULT 0,
+      expense REAL NOT NULL DEFAULT 0,
+      note TEXT NOT NULL DEFAULT '',
+      date TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON transactions(user_id, date);
+    CREATE INDEX IF NOT EXISTS idx_people_user ON people(user_id);
+    CREATE INDEX IF NOT EXISTS idx_categories_user ON categories(user_id);
+  `);
+
+  if (!columnExists(sqlite, "users", "role")) {
+    sqlite.exec(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'`);
+  }
+
+  if (!globalForDb.migrated) {
+    ensureAdmin(sqlite);
+    globalForDb.migrated = true;
+  }
+}
+
+function ensureAdmin(sqlite: Database.Database) {
+  const admin = sqlite
+    .prepare(`SELECT id FROM users WHERE role = 'admin' LIMIT 1`)
+    .get() as { id: string } | undefined;
+  if (admin) return;
+
+  const email = (process.env.ADMIN_EMAIL || "admin@finance.local").toLowerCase().trim();
+  const password = process.env.ADMIN_PASSWORD || "admin1234";
+  const name = process.env.ADMIN_NAME || "Admin";
+
+  const existing = sqlite
+    .prepare(`SELECT id FROM users WHERE email = ?`)
+    .get(email) as { id: string } | undefined;
+
+  if (existing) {
+    sqlite.prepare(`UPDATE users SET role = 'admin' WHERE id = ?`).run(existing.id);
+    return;
+  }
+
+  sqlite
+    .prepare(
+      `INSERT INTO users (id, name, email, password_hash, role, locale, created_at)
+       VALUES (?, ?, ?, ?, 'admin', 'ru', ?)`
+    )
+    .run(nanoid(), name, email, hashSync(password, 10), new Date().toISOString());
+}
+
+function createConnection() {
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+
+  const sqlite = new Database(dbPath, { timeout: 15000 });
+  sqlite.pragma("journal_mode = WAL");
+  sqlite.pragma("foreign_keys = ON");
+  sqlite.pragma("busy_timeout = 15000");
+  ensureSchema(sqlite);
+  return sqlite;
+}
+
+function getSqlite() {
+  if (!globalForDb.sqlite) {
+    globalForDb.sqlite = createConnection();
+  } else {
+    ensureSchema(globalForDb.sqlite);
+  }
+  return globalForDb.sqlite;
+}
+
+export const db = drizzle(getSqlite(), { schema });
