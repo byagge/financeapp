@@ -220,14 +220,26 @@ export function PersonReportSheet({
 }
 
 function buildPersonReport(items: TxItem[]) {
-  const income = items.reduce((s, t) => s + (t.income || 0), 0);
-  const expense = items.reduce((s, t) => s + (t.expense || 0), 0);
+  const income = items.reduce(
+    (s, t) => s + (t.income || 0) * (t.exchangeRate || 1),
+    0
+  );
+  const expense = items.reduce(
+    (s, t) => s + (t.expense || 0) * (t.exchangeRate || 1),
+    0
+  );
   const incomeItems = items.filter((t) => t.income > 0);
   const expenseItems = items.filter((t) => t.expense > 0);
   const incomeCount = incomeItems.length;
   const expenseCount = expenseItems.length;
-  const maxIncome = incomeItems.reduce((m, t) => Math.max(m, t.income), 0);
-  const maxExpense = expenseItems.reduce((m, t) => Math.max(m, t.expense), 0);
+  const maxIncome = incomeItems.reduce(
+    (m, t) => Math.max(m, t.income * (t.exchangeRate || 1)),
+    0
+  );
+  const maxExpense = expenseItems.reduce(
+    (m, t) => Math.max(m, t.expense * (t.exchangeRate || 1)),
+    0
+  );
 
   const byDateMap = new Map<
     string,
@@ -240,8 +252,8 @@ function buildPersonReport(items: TxItem[]) {
       expense: 0,
       count: 0,
     };
-    cur.income += tx.income || 0;
-    cur.expense += tx.expense || 0;
+    cur.income += (tx.income || 0) * (tx.exchangeRate || 1);
+    cur.expense += (tx.expense || 0) * (tx.exchangeRate || 1);
     cur.count += 1;
     byDateMap.set(tx.date, cur);
   }
@@ -254,23 +266,29 @@ function buildPersonReport(items: TxItem[]) {
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const topIncome = [...incomeItems]
-    .sort((a, b) => b.income - a.income)
+    .sort(
+      (a, b) =>
+        b.income * (b.exchangeRate || 1) - a.income * (a.exchangeRate || 1)
+    )
     .slice(0, 5)
     .map((t) => ({
       id: t.id,
       name: t.name,
-      amount: t.income,
+      amount: t.income * (t.exchangeRate || 1),
       date: t.date,
       note: t.note,
     }));
 
   const topExpense = [...expenseItems]
-    .sort((a, b) => b.expense - a.expense)
+    .sort(
+      (a, b) =>
+        b.expense * (b.exchangeRate || 1) - a.expense * (a.exchangeRate || 1)
+    )
     .slice(0, 5)
     .map((t) => ({
       id: t.id,
       name: t.name,
-      amount: t.expense,
+      amount: t.expense * (t.exchangeRate || 1),
       date: t.date,
       note: t.note,
     }));

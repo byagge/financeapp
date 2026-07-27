@@ -3,7 +3,7 @@
 import { X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Avatar } from "@/components/shared/Avatar";
-import { formatBalance, formatDayLabel, formatMoney, formatTxDate } from "@/lib/format";
+import { formatBalance, formatDayLabel, formatMoney, formatRate, formatTxDate } from "@/lib/format";
 import type { TxItem } from "@/lib/types";
 
 export function TransactionSheet({
@@ -18,9 +18,11 @@ export function TransactionSheet({
   onDelete?: () => void;
 }) {
   const t = useTranslations("transaction");
+  const tCurr = useTranslations("currency");
   const tCommon = useTranslations("common");
   const locale = useLocale() as "ru" | "uz";
   const amount = tx.income > 0 ? tx.income : -tx.expense;
+  const currency = tx.currency || "KGS";
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center lg:items-center">
@@ -54,10 +56,10 @@ export function TransactionSheet({
               amount >= 0 ? "text-[#16A34A]" : "text-[#EF4444]"
             }`}
           >
-            {formatMoney(amount, locale)}
+            {formatMoney(amount, locale, currency)}
           </div>
           <div className="text-[13px] text-[#9CA3AF] mt-1">
-            {amount >= 0 ? t("income") : t("expense")}
+            {amount >= 0 ? t("income") : t("expense")} · {currency}
           </div>
         </div>
 
@@ -68,11 +70,23 @@ export function TransactionSheet({
           <Row label={t("note")} value={tx.note || t("none")} />
           <Row
             label={t("income")}
-            value={tx.income > 0 ? formatBalance(tx.income, locale) : "—"}
+            value={
+              tx.income > 0 ? formatBalance(tx.income, locale, currency) : "—"
+            }
           />
           <Row
             label={t("expense")}
-            value={tx.expense > 0 ? formatBalance(tx.expense, locale) : "—"}
+            value={
+              tx.expense > 0 ? formatBalance(tx.expense, locale, currency) : "—"
+            }
+          />
+          <Row
+            label={tCurr("rate")}
+            value={
+              currency === "KGS"
+                ? "1"
+                : formatRate(tx.exchangeRate || 1, currency)
+            }
           />
         </div>
 

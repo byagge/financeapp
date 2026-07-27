@@ -129,7 +129,7 @@ export function HistoryPage() {
     for (const tx of items) {
       if (tx.expense <= 0) continue;
       const key = tx.personName || tx.name || tTx("none");
-      map.set(key, (map.get(key) || 0) + tx.expense);
+      map.set(key, (map.get(key) || 0) + tx.expense * (tx.exchangeRate || 1));
     }
     const colors = ["#EF4444", "#F97316", "#F59E0B", "#EC4899", "#9CA3AF"];
     return [...map.entries()]
@@ -143,7 +143,7 @@ export function HistoryPage() {
     for (const tx of items) {
       if (tx.income <= 0) continue;
       const key = tx.personName || tx.name || tTx("none");
-      map.set(key, (map.get(key) || 0) + tx.income);
+      map.set(key, (map.get(key) || 0) + tx.income * (tx.exchangeRate || 1));
     }
     const colors = ["#22C55E", "#10B981", "#14B8A6", "#4A3AFF", "#6366F1"];
     return [...map.entries()]

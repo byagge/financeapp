@@ -21,6 +21,8 @@ export function EditTransactionPage({ id }: { id: string }) {
         name: string;
         income: number;
         expense: number;
+        currency: string;
+        exchangeRate: number;
         note: string;
         date: string;
         personId: string | null;
@@ -67,6 +69,8 @@ export function EditTransactionPage({ id }: { id: string }) {
           name: data.name,
           income: String(data.income || ""),
           expense: String(data.expense || ""),
+          currency: data.currency || "KGS",
+          exchangeRate: String(data.exchangeRate ?? 1),
           note: data.note || "",
           date: data.date,
           personId: data.personId || "",

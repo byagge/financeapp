@@ -3,12 +3,15 @@
 import { CalendarDays, Check, Delete as BackspaceIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/routing";
 import { Avatar } from "@/components/shared/Avatar";
+import { CurrencyPicker } from "@/components/shared/CurrencyPicker";
 import { usePeople } from "@/hooks/useFinance";
-import { formatKeypadAmount } from "@/lib/format";
+import { useRateToKgs } from "@/hooks/useExchangeRates";
+import { BASE_CURRENCY } from "@/lib/currency";
+import { formatKeypadAmount, formatRate } from "@/lib/format";
 import { fetchJson } from "@/lib/types";
 import { todayISO } from "@/lib/utils";
 
@@ -33,6 +36,7 @@ export function NewTransactionPage() {
   const t = useTranslations("transaction");
   const tPeople = useTranslations("people");
   const tCommon = useTranslations("common");
+  const tCurrency = useTranslations("currency");
   const router = useRouter();
   const qc = useQueryClient();
   const search = useSearchParams();
@@ -45,10 +49,23 @@ export function NewTransactionPage() {
   const [note, setNote] = useState("");
   const [date, setDate] = useState(todayISO());
   const [personId, setPersonId] = useState(initialPerson);
+  const [currency, setCurrency] = useState<string>(BASE_CURRENCY);
+  const [exchangeRate, setExchangeRate] = useState(1);
+  const [rateEdited, setRateEdited] = useState(false);
   const [error, setError] = useState("");
 
   const { data: peopleData, isLoading: peopleLoading } = usePeople();
   const people = peopleData?.items || [];
+  const { rate: liveRate, isLoading: rateLoading } = useRateToKgs(currency);
+
+  useEffect(() => {
+    if (rateEdited) return;
+    if (currency === BASE_CURRENCY) {
+      setExchangeRate(1);
+      return;
+    }
+    if (liveRate != null) setExchangeRate(liveRate);
+  }, [currency, liveRate, rateEdited]);
 
   const selectedPerson = useMemo(
     () => people.find((p) => p.id === personId),
@@ -77,6 +94,7 @@ export function NewTransactionPage() {
     mutationFn: async () => {
       const value = Number(amount) || 0;
       if (value <= 0) throw new Error("amount");
+      if (!exchangeRate || exchangeRate <= 0) throw new Error("rate");
       const title =
         selectedPerson?.name ||
         (type === "income" ? t("income") : t("expense"));
@@ -87,6 +105,8 @@ export function NewTransactionPage() {
           name: title,
           income: type === "income" ? value : 0,
           expense: type === "expense" ? value : 0,
+          currency,
+          exchangeRate,
           note: note.trim(),
           date,
           personId: personId || null,
@@ -134,8 +154,49 @@ export function NewTransactionPage() {
             type === "income" ? "text-[#15803D]" : "text-[#B91C1C]"
           }`}
         >
-          {formatKeypadAmount(amount)}
+          {formatKeypadAmount(amount, currency)}
         </div>
+        {currency !== BASE_CURRENCY && (
+          <div className="text-[12px] text-[#6B7280] mt-2">
+            {rateLoading && !rateEdited
+              ? tCurrency("loadingRate")
+              : formatRate(exchangeRate, currency)}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 shrink-0 mb-2">
+        <CurrencyPicker
+          value={currency}
+          rate={exchangeRate}
+          onChange={(code) => {
+            setCurrency(code);
+            setRateEdited(false);
+          }}
+        />
+        {currency !== BASE_CURRENCY ? (
+          <label className="bg-white rounded-[16px] px-3 py-2.5 shadow-[0_4px_14px_rgba(17,24,39,0.04)]">
+            <div className="text-[10px] text-[#9CA3AF]">{tCurrency("rate")}</div>
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={exchangeRate}
+              onChange={(e) => {
+                setRateEdited(true);
+                setExchangeRate(Number(e.target.value) || 0);
+              }}
+              className="w-full bg-transparent outline-none font-semibold text-[13px]"
+            />
+          </label>
+        ) : (
+          <div className="bg-white rounded-[16px] px-3 py-2.5 shadow-[0_4px_14px_rgba(17,24,39,0.04)] flex items-center">
+            <div>
+              <div className="text-[10px] text-[#9CA3AF]">{tCurrency("rate")}</div>
+              <div className="font-semibold text-[13px]">1</div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="shrink-0 mb-2">

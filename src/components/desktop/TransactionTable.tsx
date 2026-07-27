@@ -3,6 +3,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
+import { useDisplayCurrency } from "@/components/providers/DisplayCurrencyProvider";
 import { formatBalance, formatDayLabel } from "@/lib/format";
 import type { TxItem } from "@/lib/types";
 
@@ -19,6 +20,7 @@ export function TransactionTable({
   const tHome = useTranslations("home");
   const tCommon = useTranslations("common");
   const locale = useLocale() as "ru" | "uz";
+  const { currency, convertFromKgs } = useDisplayCurrency();
 
   return (
     <div className="bg-white rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex flex-col min-h-[420px]">
@@ -53,10 +55,14 @@ export function TransactionTable({
                     {formatDayLabel(tx.date, locale)}
                   </td>
                   <td className="px-5 py-3.5 text-right tabular-nums text-emerald-700">
-                    {tx.income > 0 ? formatBalance(tx.income, locale) : "—"}
+                    {tx.income > 0
+                      ? formatBalance(tx.income, locale, tx.currency || "KGS")
+                      : "—"}
                   </td>
                   <td className="px-5 py-3.5 text-right tabular-nums text-black/70">
-                    {tx.expense > 0 ? formatBalance(tx.expense, locale) : "—"}
+                    {tx.expense > 0
+                      ? formatBalance(tx.expense, locale, tx.currency || "KGS")
+                      : "—"}
                   </td>
                   <td className="px-5 py-3.5 text-black/55">
                     {tx.personName || "—"}
@@ -97,17 +103,17 @@ export function TransactionTable({
       <div className="sticky bottom-0 border-t border-[#EEF0F5] bg-white px-5 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6 text-sm ml-auto">
           <span className="text-[#16A34A] font-medium">
-            +{formatBalance(summary.income, locale)}
+            +{formatBalance(convertFromKgs(summary.income), locale, currency)}
           </span>
           <span className="text-[#EF4444] font-medium">
-            −{formatBalance(summary.expense, locale)}
+            −{formatBalance(convertFromKgs(summary.expense), locale, currency)}
           </span>
           <span
             className={`text-lg font-bold tabular-nums ${
               summary.total >= 0 ? "text-[#16A34A]" : "text-[#EF4444]"
             }`}
           >
-            {formatBalance(summary.total, locale)}
+            {formatBalance(convertFromKgs(summary.total), locale, currency)}
           </span>
         </div>
       </div>

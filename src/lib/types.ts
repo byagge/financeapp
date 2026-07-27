@@ -3,6 +3,8 @@ export type TxItem = {
   name: string;
   income: number;
   expense: number;
+  currency: string;
+  exchangeRate: number;
   note: string;
   date: string;
   createdAt: string;
@@ -30,6 +32,13 @@ export type PersonItem = {
 export type CategoryItem = {
   id: string;
   name: string;
+};
+
+export type RatesResponse = {
+  base: string;
+  date: string;
+  rates: Record<string, number>;
+  source: string;
 };
 
 export function buildTxQuery(params: Record<string, string | undefined | null>) {

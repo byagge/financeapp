@@ -42,6 +42,7 @@ export function TransactionList({
         <div className="bg-white rounded-[24px] px-2 shadow-[0_8px_24px_rgba(17,24,39,0.04)]">
           {items.map((tx) => {
             const amount = tx.income > 0 ? tx.income : -tx.expense;
+            const currency = tx.currency || "KGS";
             const content = (
               <>
                 <Avatar
@@ -61,10 +62,10 @@ export function TransactionList({
                       amount >= 0 ? "text-[#16A34A]" : "text-[#EF4444]"
                     }`}
                   >
-                    {formatMoney(amount, locale)}
+                    {formatMoney(amount, locale, currency)}
                   </div>
                   <div className="text-[11px] text-[#9CA3AF] mt-0.5">
-                    {amount >= 0 ? tTx("income") : tTx("expense")}
+                    {amount >= 0 ? tTx("income") : tTx("expense")} · {currency}
                   </div>
                 </div>
               </>

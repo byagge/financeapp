@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/routing";
 import { Avatar } from "@/components/shared/Avatar";
-import { formatBalance, formatMoney, formatTxDate } from "@/lib/format";
+import { formatBalance, formatMoney, formatRate, formatTxDate } from "@/lib/format";
 import { fetchJson, type TxItem } from "@/lib/types";
 
 export function TransactionDetailSheet({
@@ -16,11 +16,13 @@ export function TransactionDetailSheet({
   onClose: () => void;
 }) {
   const t = useTranslations("transaction");
+  const tCurr = useTranslations("currency");
   const tCommon = useTranslations("common");
   const locale = useLocale() as "ru" | "uz";
   const router = useRouter();
   const qc = useQueryClient();
   const amount = tx.income > 0 ? tx.income : -tx.expense;
+  const currency = tx.currency || "KGS";
 
   const del = useMutation({
     mutationFn: () => fetchJson(`/api/transactions/${tx.id}`, { method: "DELETE" }),
@@ -66,15 +68,30 @@ export function TransactionDetailSheet({
             amount >= 0 ? "text-[#16A34A]" : "text-[#EF4444]"
           }`}
         >
-          {formatMoney(amount, locale)}
+          {formatMoney(amount, locale, currency)}
         </div>
 
         <div className="space-y-3 bg-[#F8F9FC] rounded-[20px] p-4 text-[14px]">
           <Row label={t("type")} value={amount >= 0 ? t("income") : t("expense")} />
           <Row label={t("date")} value={tx.date} />
           <Row label={t("person")} value={tx.personName || t("none")} />
-          <Row label={t("income")} value={formatBalance(tx.income, locale)} />
-          <Row label={t("expense")} value={formatBalance(tx.expense, locale)} />
+          <Row label={tCurr("label")} value={currency} />
+          <Row
+            label={t("income")}
+            value={formatBalance(tx.income, locale, currency)}
+          />
+          <Row
+            label={t("expense")}
+            value={formatBalance(tx.expense, locale, currency)}
+          />
+          <Row
+            label={tCurr("rate")}
+            value={
+              currency === "KGS"
+                ? "1"
+                : formatRate(tx.exchangeRate || 1, currency)
+            }
+          />
           <Row label={t("note")} value={tx.note || "—"} />
         </div>
 

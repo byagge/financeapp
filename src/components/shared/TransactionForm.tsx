@@ -3,10 +3,13 @@
 import { CalendarDays, Check, Plus } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useRouter } from "@/i18n/routing";
 import { Avatar } from "@/components/shared/Avatar";
+import { CurrencyPicker } from "@/components/shared/CurrencyPicker";
 import { usePeople } from "@/hooks/useFinance";
+import { useRateToKgs } from "@/hooks/useExchangeRates";
+import { BASE_CURRENCY } from "@/lib/currency";
 import { fetchJson } from "@/lib/types";
 import { todayISO } from "@/lib/utils";
 
@@ -17,6 +20,8 @@ type FormState = {
   note: string;
   date: string;
   personId: string;
+  currency: string;
+  exchangeRate: string;
 };
 
 export function TransactionForm({
@@ -30,6 +35,7 @@ export function TransactionForm({
 }) {
   const t = useTranslations("transaction");
   const tPeople = useTranslations("people");
+  const tCurrency = useTranslations("currency");
   const router = useRouter();
   const qc = useQueryClient();
   const { data: peopleData } = usePeople();
@@ -43,10 +49,25 @@ export function TransactionForm({
     note: initial?.note || "",
     date: initial?.date || todayISO(),
     personId: initial?.personId || "",
+    currency: initial?.currency || BASE_CURRENCY,
+    exchangeRate: initial?.exchangeRate || "1",
   });
+  const [rateEdited, setRateEdited] = useState(Boolean(id));
   const [error, setError] = useState("");
 
   const people = peopleData?.items || [];
+  const { rate: liveRate } = useRateToKgs(form.currency);
+
+  useEffect(() => {
+    if (rateEdited) return;
+    if (form.currency === BASE_CURRENCY) {
+      setForm((f) => ({ ...f, exchangeRate: "1" }));
+      return;
+    }
+    if (liveRate != null) {
+      setForm((f) => ({ ...f, exchangeRate: String(liveRate) }));
+    }
+  }, [form.currency, liveRate, rateEdited]);
 
   const selectedPerson = useMemo(
     () => people.find((p) => p.id === form.personId),
@@ -62,6 +83,8 @@ export function TransactionForm({
           (Number(form.income) > 0 ? t("income") : t("expense")),
         income: Number(form.income) || 0,
         expense: Number(form.expense) || 0,
+        currency: form.currency,
+        exchangeRate: Number(form.exchangeRate) || 1,
         note: form.note.trim(),
         date: form.date,
         personId: form.personId || null,
@@ -142,6 +165,34 @@ export function TransactionForm({
           {people.length === 0 && (
             <div className="text-sm text-[#9CA3AF] py-2">{tPeople("empty")}</div>
           )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <CurrencyPicker
+          value={form.currency}
+          rate={Number(form.exchangeRate) || null}
+          onChange={(code) => {
+            setRateEdited(false);
+            set({ currency: code });
+          }}
+        />
+        <div className="bg-white rounded-[20px] px-4 py-3 shadow-[0_6px_20px_rgba(17,24,39,0.04)]">
+          <div className="text-[11px] text-[#9CA3AF] mb-1 font-medium">
+            {tCurrency("rate")}
+          </div>
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={form.exchangeRate}
+            onChange={(e) => {
+              setRateEdited(true);
+              set({ exchangeRate: e.target.value });
+            }}
+            disabled={form.currency === BASE_CURRENCY}
+            className="w-full outline-none bg-transparent text-[15px] font-semibold disabled:opacity-60"
+          />
         </div>
       </div>
 

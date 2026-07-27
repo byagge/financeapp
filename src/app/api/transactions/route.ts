@@ -5,12 +5,16 @@ import { z } from "zod";
 import { db } from "@/db";
 import { categories, people, transactions } from "@/db/schema";
 import { requireUser } from "@/lib/api";
+import { BASE_CURRENCY, isValidCurrency } from "@/lib/currency";
+import { getRateToKgs } from "@/lib/exchange";
 import { nowISO, todayISO } from "@/lib/utils";
 
 const createSchema = z.object({
   name: z.string().min(1).max(200),
   income: z.number().min(0).default(0),
   expense: z.number().min(0).default(0),
+  currency: z.string().length(3).optional().default(BASE_CURRENCY),
+  exchangeRate: z.number().positive().optional(),
   note: z.string().max(1000).optional().default(""),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   personId: z.string().nullable().optional(),
@@ -51,6 +55,7 @@ export async function GET(req: Request) {
         like(transactions.name, pattern),
         like(transactions.note, pattern),
         like(transactions.date, pattern),
+        like(transactions.currency, pattern),
         like(people.name, pattern),
         like(categories.name, pattern),
         sql`cast(${transactions.income} as text) like ${pattern}`,
@@ -73,6 +78,8 @@ export async function GET(req: Request) {
       name: transactions.name,
       income: transactions.income,
       expense: transactions.expense,
+      currency: transactions.currency,
+      exchangeRate: transactions.exchangeRate,
       note: transactions.note,
       date: transactions.date,
       createdAt: transactions.createdAt,
@@ -89,8 +96,14 @@ export async function GET(req: Request) {
     .orderBy(desc(transactions.date), desc(transactions.createdAt))
     .all();
 
-  const income = rows.reduce((s, r) => s + (r.income || 0), 0);
-  const expense = rows.reduce((s, r) => s + (r.expense || 0), 0);
+  const income = rows.reduce(
+    (s, r) => s + (r.income || 0) * (r.exchangeRate || 1),
+    0
+  );
+  const expense = rows.reduce(
+    (s, r) => s + (r.expense || 0) * (r.exchangeRate || 1),
+    0
+  );
 
   return NextResponse.json({
     items: rows,
@@ -113,6 +126,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Need income or expense" }, { status: 400 });
   }
 
+  const currency = (data.currency || BASE_CURRENCY).toUpperCase();
+  if (!isValidCurrency(currency)) {
+    return NextResponse.json({ error: "Unknown currency" }, { status: 400 });
+  }
+
+  let exchangeRate = data.exchangeRate;
+  if (exchangeRate == null) {
+    try {
+      exchangeRate = await getRateToKgs(currency);
+    } catch {
+      return NextResponse.json({ error: "Exchange rate unavailable" }, { status: 502 });
+    }
+  }
+
   const id = nanoid();
   const createdAt = nowISO();
   const row = {
@@ -121,6 +148,8 @@ export async function POST(req: Request) {
     name: data.name.trim(),
     income: data.income || 0,
     expense: data.expense || 0,
+    currency,
+    exchangeRate,
     note: data.note || "",
     date: data.date || todayISO(),
     personId: data.personId || null,

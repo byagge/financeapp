@@ -63,6 +63,8 @@ function ensureSchema(sqlite: Database.Database) {
       name TEXT NOT NULL,
       income REAL NOT NULL DEFAULT 0,
       expense REAL NOT NULL DEFAULT 0,
+      currency TEXT NOT NULL DEFAULT 'KGS',
+      exchange_rate REAL NOT NULL DEFAULT 1,
       note TEXT NOT NULL DEFAULT '',
       date TEXT NOT NULL,
       created_at TEXT NOT NULL
@@ -75,6 +77,14 @@ function ensureSchema(sqlite: Database.Database) {
 
   if (!columnExists(sqlite, "users", "role")) {
     sqlite.exec(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'`);
+  }
+  if (!columnExists(sqlite, "transactions", "currency")) {
+    sqlite.exec(`ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT 'KGS'`);
+  }
+  if (!columnExists(sqlite, "transactions", "exchange_rate")) {
+    sqlite.exec(
+      `ALTER TABLE transactions ADD COLUMN exchange_rate REAL NOT NULL DEFAULT 1`
+    );
   }
 
   if (!isBuildPhase() && !globalForDb.migrated) {

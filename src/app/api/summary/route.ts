@@ -29,15 +29,18 @@ export async function GET(req: Request) {
 
   const where = and(...conditions);
 
+  const kgsIncome = sql`${transactions.income} * ${transactions.exchangeRate}`;
+  const kgsExpense = sql`${transactions.expense} * ${transactions.exchangeRate}`;
+
   const summaryRow = db
     .select({
-      income: sql<number>`coalesce(sum(${transactions.income}), 0)`,
-      expense: sql<number>`coalesce(sum(${transactions.expense}), 0)`,
+      income: sql<number>`coalesce(sum(${kgsIncome}), 0)`,
+      expense: sql<number>`coalesce(sum(${kgsExpense}), 0)`,
       count: sql<number>`count(*)`,
       incomeCount: sql<number>`sum(case when ${transactions.income} > 0 then 1 else 0 end)`,
       expenseCount: sql<number>`sum(case when ${transactions.expense} > 0 then 1 else 0 end)`,
-      maxIncome: sql<number>`coalesce(max(${transactions.income}), 0)`,
-      maxExpense: sql<number>`coalesce(max(${transactions.expense}), 0)`,
+      maxIncome: sql<number>`coalesce(max(${kgsIncome}), 0)`,
+      maxExpense: sql<number>`coalesce(max(${kgsExpense}), 0)`,
     })
     .from(transactions)
     .where(where)
@@ -74,8 +77,8 @@ export async function GET(req: Request) {
       personId: transactions.personId,
       personName: people.name,
       avatarColor: people.avatarColor,
-      income: sql<number>`coalesce(sum(${transactions.income}), 0)`,
-      expense: sql<number>`coalesce(sum(${transactions.expense}), 0)`,
+      income: sql<number>`coalesce(sum(${kgsIncome}), 0)`,
+      expense: sql<number>`coalesce(sum(${kgsExpense}), 0)`,
       count: sql<number>`count(*)`,
     })
     .from(transactions)
@@ -97,8 +100,8 @@ export async function GET(req: Request) {
   const byDate = db
     .select({
       date: transactions.date,
-      income: sql<number>`coalesce(sum(${transactions.income}), 0)`,
-      expense: sql<number>`coalesce(sum(${transactions.expense}), 0)`,
+      income: sql<number>`coalesce(sum(${kgsIncome}), 0)`,
+      expense: sql<number>`coalesce(sum(${kgsExpense}), 0)`,
       count: sql<number>`count(*)`,
     })
     .from(transactions)
@@ -118,7 +121,9 @@ export async function GET(req: Request) {
     .select({
       id: transactions.id,
       name: transactions.name,
-      amount: transactions.income,
+      amount: sql<number>`${kgsIncome}`,
+      currency: transactions.currency,
+      originalAmount: transactions.income,
       date: transactions.date,
       note: transactions.note,
       personName: people.name,
@@ -127,7 +132,7 @@ export async function GET(req: Request) {
     .from(transactions)
     .leftJoin(people, eq(transactions.personId, people.id))
     .where(and(...conditions, sql`${transactions.income} > 0`))
-    .orderBy(desc(transactions.income))
+    .orderBy(desc(sql`${kgsIncome}`))
     .limit(5)
     .all();
 
@@ -135,7 +140,9 @@ export async function GET(req: Request) {
     .select({
       id: transactions.id,
       name: transactions.name,
-      amount: transactions.expense,
+      amount: sql<number>`${kgsExpense}`,
+      currency: transactions.currency,
+      originalAmount: transactions.expense,
       date: transactions.date,
       note: transactions.note,
       personName: people.name,
@@ -144,7 +151,7 @@ export async function GET(req: Request) {
     .from(transactions)
     .leftJoin(people, eq(transactions.personId, people.id))
     .where(and(...conditions, sql`${transactions.expense} > 0`))
-    .orderBy(desc(transactions.expense))
+    .orderBy(desc(sql`${kgsExpense}`))
     .limit(5)
     .all();
 

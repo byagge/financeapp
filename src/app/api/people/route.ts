@@ -22,8 +22,8 @@ export async function GET() {
       name: people.name,
       avatarColor: people.avatarColor,
       createdAt: people.createdAt,
-      income: sql<number>`coalesce(sum(${transactions.income}), 0)`,
-      expense: sql<number>`coalesce(sum(${transactions.expense}), 0)`,
+      income: sql<number>`coalesce(sum(${transactions.income} * ${transactions.exchangeRate}), 0)`,
+      expense: sql<number>`coalesce(sum(${transactions.expense} * ${transactions.exchangeRate}), 0)`,
     })
     .from(people)
     .leftJoin(

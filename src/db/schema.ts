@@ -1,4 +1,4 @@
-import { sqliteTable, text, real, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, real } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -43,6 +43,10 @@ export const transactions = sqliteTable("transactions", {
   name: text("name").notNull(),
   income: real("income").notNull().default(0),
   expense: real("expense").notNull().default(0),
+  /** ISO 4217 code; amounts are in this currency */
+  currency: text("currency").notNull().default("KGS"),
+  /** KGS per 1 unit of currency at creation (locked, editable) */
+  exchangeRate: real("exchange_rate").notNull().default(1),
   note: text("note").notNull().default(""),
   date: text("date").notNull(),
   createdAt: text("created_at").notNull(),

@@ -3,6 +3,12 @@
 import { ChevronDown, Eye, EyeOff, TrendingDown, TrendingUp } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import { useDisplayCurrency } from "@/components/providers/DisplayCurrencyProvider";
+import {
+  DISPLAY_CURRENCIES,
+  currencySymbol,
+  type DisplayCurrency,
+} from "@/lib/currency";
 import { formatBalance } from "@/lib/format";
 import { formatPeriodLabel, type Period } from "@/lib/period";
 
@@ -20,19 +26,28 @@ export function BalanceCard({
   onPeriodChange: (p: Period) => void;
 }) {
   const t = useTranslations("home");
+  const tCurrency = useTranslations("currency");
   const locale = useLocale() as "ru" | "uz";
   const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const { currency, setCurrency, convertFromKgs } = useDisplayCurrency();
 
   const periods: Period[] = ["day", "week", "month", "year"];
+  const displayTotal = convertFromKgs(total);
+  const displayIncome = convertFromKgs(income);
+  const displayExpense = convertFromKgs(expense);
 
   return (
     <div className="balance-gradient relative rounded-[28px] px-5 pt-4 pb-5 text-white shadow-[0_18px_40px_rgba(46,58,180,0.28)] overflow-visible">
-      <div className="relative z-30 flex items-center justify-between">
+      <div className="relative z-30 flex items-center justify-between gap-2">
         <div className="relative z-30">
           <button
             type="button"
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => {
+              setOpen((v) => !v);
+              setCurrencyOpen(false);
+            }}
             className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[12px] font-medium backdrop-blur-sm capitalize"
           >
             {formatPeriodLabel(period, locale)}
@@ -66,13 +81,56 @@ export function BalanceCard({
             </>
           )}
         </div>
+
+        <div className="relative z-30">
+          <button
+            type="button"
+            onClick={() => {
+              setCurrencyOpen((v) => !v);
+              setOpen(false);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[12px] font-medium backdrop-blur-sm"
+          >
+            {currencySymbol(currency)}
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+          {currencyOpen && (
+            <>
+              <button
+                type="button"
+                className="fixed inset-0 z-40 cursor-default"
+                aria-label="close"
+                onClick={() => setCurrencyOpen(false)}
+              />
+              <div className="absolute top-full right-0 mt-2 min-w-[168px] rounded-2xl bg-white text-[#111827] shadow-[0_16px_40px_rgba(0,0,0,0.2)] overflow-hidden z-50">
+                {DISPLAY_CURRENCIES.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#F5F6FA] font-medium ${
+                      c === currency ? "bg-[#EEECFF] text-[#4A3AFF]" : ""
+                    }`}
+                    onClick={() => {
+                      setCurrency(c as DisplayCurrency);
+                      setCurrencyOpen(false);
+                    }}
+                  >
+                    {tCurrency(`display.${c}`)} · {currencySymbol(c)}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="relative z-0 mt-6">
         <div className="text-[13px] text-white/70 font-medium">{t("balance")}</div>
         <div className="mt-1.5 flex items-center gap-2.5">
           <div className="text-[34px] leading-none font-bold tracking-[-0.03em]">
-            {hidden ? "•••••• с" : formatBalance(total, locale)}
+            {hidden
+              ? `•••••• ${currencySymbol(currency)}`
+              : formatBalance(displayTotal, locale, currency)}
           </div>
           <button
             type="button"
@@ -90,7 +148,7 @@ export function BalanceCard({
           <div className="text-[12px] text-white/65">{t("income")}</div>
           <div className="mt-1 flex items-center gap-1.5">
             <span className="text-[15px] font-semibold">
-              {hidden ? "•••" : formatBalance(income, locale)}
+              {hidden ? "•••" : formatBalance(displayIncome, locale, currency)}
             </span>
             <TrendingUp className="w-3.5 h-3.5 text-[#86EFAC]" />
           </div>
@@ -99,7 +157,7 @@ export function BalanceCard({
           <div className="text-[12px] text-white/65">{t("expense")}</div>
           <div className="mt-1 flex items-center gap-1.5">
             <span className="text-[15px] font-semibold">
-              {hidden ? "•••" : formatBalance(expense, locale)}
+              {hidden ? "•••" : formatBalance(displayExpense, locale, currency)}
             </span>
             <TrendingDown className="w-3.5 h-3.5 text-[#FCA5A5]" />
           </div>
