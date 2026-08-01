@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Providers } from "@/components/shared/Providers";
+import { isAppLocale } from "@/i18n/locales";
 import { routing } from "@/i18n/routing";
 
 export function generateStaticParams() {
@@ -16,7 +17,7 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if (!routing.locales.includes(locale as "ru" | "uz")) {
+  if (!isAppLocale(locale) || !routing.locales.includes(locale)) {
     notFound();
   }
 

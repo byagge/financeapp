@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import NextAuth from "next-auth";
 import createMiddleware from "next-intl/middleware";
 import { authConfig } from "@/lib/auth.config";
+import { defaultLocale, localePrefixPattern } from "@/i18n/locales";
 import { routing } from "@/i18n/routing";
 
 const { auth } = NextAuth(authConfig);
@@ -20,11 +21,11 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  const localeMatch = pathname.match(/^\/(ru|uz)(\/|$)/);
-  const locale = localeMatch?.[1] ?? "ru";
-  const pathWithoutLocale = pathname.replace(/^\/(ru|uz)/, "") || "/";
+  const localeMatch = pathname.match(localePrefixPattern);
+  const locale = localeMatch?.[1] ?? defaultLocale;
+  const stripped = pathname.replace(/^\/(uz-Latn|ru|uz|ky|en)/, "") || "/";
   const isPublic = publicPaths.some(
-    (p) => pathWithoutLocale === p || pathWithoutLocale.startsWith(`${p}/`)
+    (p) => stripped === p || stripped.startsWith(`${p}/`)
   );
 
   const isLoggedIn = !!req.auth;

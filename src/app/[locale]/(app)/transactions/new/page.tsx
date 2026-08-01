@@ -10,7 +10,7 @@ export default async function Page({
   const { locale } = await params;
   setRequestLocale(locale);
   return (
-    <Suspense fallback={<div className="text-center py-20 text-black/40">…</div>}>
+    <Suspense fallback={<div className="text-center py-20 text-muted">…</div>}>
       <NewTransactionPage />
     </Suspense>
   );

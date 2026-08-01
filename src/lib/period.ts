@@ -4,20 +4,34 @@ import {
   endOfWeek,
   endOfYear,
   format,
+  parseISO,
   startOfDay,
   startOfMonth,
   startOfWeek,
   startOfYear,
+  subMonths,
 } from "date-fns";
-import { enUS, ru, uzCyrl } from "date-fns/locale";
+import { dateFnsLocale } from "@/lib/locale";
 
 export type Period = "day" | "week" | "month" | "year";
 
-function dateLocale(locale: "ru" | "uz") {
-  return locale === "uz" ? uzCyrl : ru;
+/** Home/balances period filter: today, week, or anything from the sheet. */
+export type PeriodKey = "day" | "week" | "custom";
+
+export type DateRange = {
+  from: string;
+  to: string;
+};
+
+export type PeriodFilter = DateRange & {
+  key: PeriodKey;
+};
+
+function dateLocale(locale: string) {
+  return dateFnsLocale(locale);
 }
 
-export function getPeriodRange(period: Period, base = new Date()) {
+export function getPeriodRange(period: Period, base = new Date()): DateRange {
   if (period === "day") {
     return {
       from: format(startOfDay(base), "yyyy-MM-dd"),
@@ -42,10 +56,44 @@ export function getPeriodRange(period: Period, base = new Date()) {
   };
 }
 
+/** Current month + previous 2 months (three calendar months). */
+export function getThreeMonthsRange(base = new Date()): DateRange {
+  return {
+    from: format(startOfMonth(subMonths(base, 2)), "yyyy-MM-dd"),
+    to: format(endOfMonth(base), "yyyy-MM-dd"),
+  };
+}
+
+export function defaultPeriodFilter(key: PeriodKey = "day"): PeriodFilter {
+  const range = getPeriodRange(key === "custom" ? "day" : key);
+  return { key, ...range };
+}
+
+/** Display dates as 19.07.2026 */
+export function formatDisplayDate(iso: string) {
+  try {
+    return format(parseISO(iso), "dd.MM.yyyy");
+  } catch {
+    return iso;
+  }
+}
+
+/** Short range for the custom pill: 19.07 – 27.07 */
+export function formatRangeShort(from: string, to: string) {
+  try {
+    const a = parseISO(from);
+    const b = parseISO(to);
+    if (from === to) return format(a, "dd.MM");
+    return `${format(a, "dd.MM")} – ${format(b, "dd.MM")}`;
+  } catch {
+    return `${from} – ${to}`;
+  }
+}
+
 /** Подписи периода: «26 июля», «20–26 июля», «июль», «2026» */
 export function formatPeriodLabel(
   period: Period,
-  locale: "ru" | "uz" = "ru",
+  locale = "ru",
   base = new Date()
 ) {
   const loc = dateLocale(locale);
@@ -79,16 +127,16 @@ export function greetingKey(date = new Date()): "morning" | "day" | "evening" | 
   return "night";
 }
 
-export function formatHeaderDate(date = new Date(), locale: "ru" | "uz" = "ru") {
+export function formatHeaderDate(date = new Date(), locale = "ru") {
   return format(date, "EEE, d MMMM yyyy", {
     locale: dateLocale(locale),
   });
 }
 
-export function formatGroupDate(iso: string, locale: "ru" | "uz" = "ru") {
+export function formatGroupDate(iso: string, locale = "ru") {
   try {
     return format(new Date(`${iso}T12:00:00`), "d EEE MM.yyyy", {
-      locale: locale === "uz" ? uzCyrl : enUS,
+      locale: dateLocale(locale),
     });
   } catch {
     return iso;

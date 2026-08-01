@@ -9,7 +9,7 @@ import { requireUser } from "@/lib/api";
 const schema = z
   .object({
     name: z.string().min(1).max(100).optional(),
-    locale: z.enum(["ru", "uz"]).optional(),
+    locale: z.enum(["ru", "uz", "uz-Latn", "ky", "en"]).optional(),
     currentPassword: z.string().min(1).max(100).optional(),
     newPassword: z.string().min(6).max(100).optional(),
   })

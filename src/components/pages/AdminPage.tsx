@@ -73,7 +73,7 @@ export function AdminPage() {
 
   if (status === "loading" || session?.user?.role !== "admin") {
     return (
-      <div className="py-16 text-center text-[#9CA3AF]">{tCommon("loading")}</div>
+      <div className="py-16 text-center text-muted">{tCommon("loading")}</div>
     );
   }
 
@@ -87,7 +87,7 @@ export function AdminPage() {
             <Shield className="w-5 h-5 text-[#4A3AFF]" />
             {t("title")}
           </h1>
-          <p className="text-[13px] text-[#9CA3AF] mt-1">{t("subtitle")}</p>
+          <p className="text-[13px] text-muted mt-1">{t("subtitle")}</p>
         </div>
         <button
           type="button"
@@ -101,7 +101,7 @@ export function AdminPage() {
 
       {open && (
         <form
-          className="bg-white rounded-[22px] p-4 space-y-3 shadow-[0_8px_24px_rgba(17,24,39,0.04)] overflow-hidden"
+          className="bg-card rounded-[22px] p-4 space-y-3 shadow-card overflow-hidden"
           onSubmit={(e) => {
             e.preventDefault();
             setError("");
@@ -114,7 +114,7 @@ export function AdminPage() {
             onChange={(e) => setName(e.target.value)}
             placeholder={tAuth("name")}
             required
-            className="w-full min-w-0 bg-[#F5F6FA] rounded-xl px-4 py-3 outline-none"
+            className="w-full min-w-0 bg-background rounded-xl px-4 py-3 outline-none"
           />
           <input
             type="email"
@@ -122,7 +122,7 @@ export function AdminPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder={tAuth("email")}
             required
-            className="w-full min-w-0 bg-[#F5F6FA] rounded-xl px-4 py-3 outline-none"
+            className="w-full min-w-0 bg-background rounded-xl px-4 py-3 outline-none"
           />
           <input
             type="password"
@@ -131,7 +131,7 @@ export function AdminPage() {
             placeholder={tAuth("password")}
             required
             minLength={6}
-            className="w-full min-w-0 bg-[#F5F6FA] rounded-xl px-4 py-3 outline-none"
+            className="w-full min-w-0 bg-background rounded-xl px-4 py-3 outline-none"
           />
           {error && <p className="text-sm text-[#EF4444]">{error}</p>}
           <div className="grid grid-cols-2 gap-2">
@@ -141,7 +141,7 @@ export function AdminPage() {
                 setOpen(false);
                 setError("");
               }}
-              className="rounded-xl px-4 py-3 font-semibold text-[#6B7280] bg-[#F5F6FA]"
+              className="rounded-xl px-4 py-3 font-semibold text-muted-strong bg-background"
             >
               {tCommon("cancel")}
             </button>
@@ -157,24 +157,24 @@ export function AdminPage() {
       )}
 
       {isLoading ? (
-        <div className="bg-white rounded-[24px] p-8 text-center text-[#9CA3AF]">…</div>
+        <div className="bg-card rounded-[24px] p-8 text-center text-muted">…</div>
       ) : items.length === 0 ? (
-        <div className="bg-white rounded-[24px] p-8 text-center text-[#9CA3AF]">
+        <div className="bg-card rounded-[24px] p-8 text-center text-muted">
           {t("empty")}
         </div>
       ) : (
-        <div className="bg-white rounded-[24px] divide-y divide-[#EEF0F5] overflow-hidden shadow-[0_8px_24px_rgba(17,24,39,0.04)]">
+        <div className="bg-card rounded-[24px] divide-y divide-line overflow-hidden shadow-card">
           {items.map((u) => (
             <div key={u.id} className="flex items-center gap-3 px-4 py-3.5">
               <div className="flex-1 min-w-0">
                 <div className="font-semibold truncate">{u.name}</div>
-                <div className="text-xs text-[#9CA3AF] truncate">{u.email}</div>
+                <div className="text-xs text-muted truncate">{u.email}</div>
               </div>
               <span
                 className={`text-[11px] font-semibold rounded-full px-2.5 py-1 shrink-0 ${
                   u.role === "admin"
-                    ? "bg-[#EEECFF] text-[#4A3AFF]"
-                    : "bg-[#F5F6FA] text-[#6B7280]"
+                    ? "bg-primary-soft text-[#4A3AFF]"
+                    : "bg-background text-muted-strong"
                 }`}
               >
                 {u.role === "admin" ? t("roleAdmin") : t("roleUser")}
@@ -182,7 +182,7 @@ export function AdminPage() {
               {u.id !== session.user.id && (
                 <button
                   type="button"
-                  className="p-2 rounded-xl hover:bg-[#FEF2F2] text-[#EF4444] shrink-0"
+                  className="p-2 rounded-xl hover:bg-[#FEF2F2]/20 dark:hover:bg-[#7f1d1d]/30 text-[#EF4444] shrink-0"
                   onClick={() => {
                     if (confirm(t("confirmDelete"))) remove.mutate(u.id);
                   }}

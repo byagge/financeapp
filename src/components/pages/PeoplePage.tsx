@@ -57,7 +57,7 @@ export function PeoplePage() {
 
       {open && (
         <form
-          className="bg-white rounded-[22px] p-4 space-y-3 shadow-[0_8px_24px_rgba(17,24,39,0.04)] animate-fade-in overflow-hidden"
+          className="bg-card rounded-[22px] p-4 space-y-3 shadow-card animate-fade-in overflow-hidden"
           onSubmit={(e) => {
             e.preventDefault();
             if (name.trim()) create.mutate();
@@ -68,7 +68,7 @@ export function PeoplePage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("name")}
-            className="w-full min-w-0 bg-[#F5F6FA] rounded-xl px-4 py-3 outline-none"
+            className="w-full min-w-0 bg-background rounded-xl px-4 py-3 outline-none"
           />
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -77,7 +77,7 @@ export function PeoplePage() {
                 setOpen(false);
                 setName("");
               }}
-              className="rounded-xl px-4 py-3 font-semibold text-[#6B7280] bg-[#F5F6FA]"
+              className="rounded-xl px-4 py-3 font-semibold text-muted-strong bg-background"
             >
               {tCommon("cancel")}
             </button>
@@ -92,24 +92,24 @@ export function PeoplePage() {
       )}
 
       {isLoading ? (
-        <div className="bg-white rounded-[24px] p-8 text-center text-[#9CA3AF]">…</div>
+        <div className="bg-card rounded-[24px] p-8 text-center text-muted">…</div>
       ) : items.length === 0 ? (
-        <div className="bg-white rounded-[24px] p-8 text-center text-[#9CA3AF]">
+        <div className="bg-card rounded-[24px] p-8 text-center text-muted">
           {t("empty")}
         </div>
       ) : (
-        <div className="bg-white rounded-[24px] divide-y divide-[#EEF0F5] overflow-hidden shadow-[0_8px_24px_rgba(17,24,39,0.04)]">
+        <div className="bg-card rounded-[24px] divide-y divide-line overflow-hidden shadow-card">
           {items.map((p) => (
             <div key={p.id} className="flex items-center gap-2 px-2 py-1.5">
               <button
                 type="button"
                 onClick={() => setSelected(p)}
-                className="flex flex-1 min-w-0 items-center gap-3 px-2 py-2 rounded-xl text-left hover:bg-[#F8F9FC] transition-colors"
+                className="flex flex-1 min-w-0 items-center gap-3 px-2 py-2 rounded-xl text-left hover:bg-surface transition-colors"
               >
                 <Avatar name={p.name} color={p.avatarColor} size={48} />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold truncate">{p.name}</div>
-                  <div className="text-xs text-[#9CA3AF]">
+                  <div className="text-xs text-muted">
                     {t("income")}: {formatBalance(p.income, locale)} · {t("expense")}:{" "}
                     {formatBalance(p.expense, locale)}
                   </div>
@@ -124,7 +124,7 @@ export function PeoplePage() {
               </button>
               <button
                 type="button"
-                className="p-2 rounded-xl hover:bg-[#FEF2F2] text-[#EF4444] shrink-0"
+                className="p-2 rounded-xl hover:bg-[#FEF2F2]/20 dark:hover:bg-[#7f1d1d]/30 text-[#EF4444] shrink-0"
                 onClick={() => {
                   if (confirm(tCommon("confirmDelete"))) remove.mutate(p.id);
                 }}

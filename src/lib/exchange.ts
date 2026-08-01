@@ -1,4 +1,5 @@
 import { BASE_CURRENCY } from "@/lib/currency";
+import { roundRate } from "@/lib/format";
 
 export type RatesPayload = {
   base: typeof BASE_CURRENCY;
@@ -13,12 +14,20 @@ type Cache = { at: number; data: RatesPayload };
 const globalRates = globalThis as unknown as { __fxCache?: Cache };
 const TTL_MS = 60 * 60 * 1000; // 1 hour
 
+function roundRatesMap(raw: Record<string, number>): Record<string, number> {
+  const rates: Record<string, number> = {};
+  for (const [code, value] of Object.entries(raw)) {
+    rates[code] = code === BASE_CURRENCY ? 1 : roundRate(value);
+  }
+  return rates;
+}
+
 function invertOpenErRates(raw: Record<string, number>): Record<string, number> {
   const rates: Record<string, number> = { [BASE_CURRENCY]: 1 };
   for (const [code, perKgs] of Object.entries(raw)) {
     if (!Number.isFinite(perKgs) || perKgs === 0) continue;
     // open.er-api: value = units of `code` per 1 KGS → invert to KGS per 1 code
-    rates[code] = code === BASE_CURRENCY ? 1 : 1 / perKgs;
+    rates[code] = code === BASE_CURRENCY ? 1 : roundRate(1 / perKgs);
   }
   return rates;
 }
@@ -65,12 +74,13 @@ async function fetchFrankfurterNbkr(): Promise<RatesPayload> {
       continue;
     }
     if (row.date) date = row.date;
-    rates[row.quote] = row.quote === BASE_CURRENCY ? 1 : 1 / row.rate;
+    rates[row.quote] =
+      row.quote === BASE_CURRENCY ? 1 : roundRate(1 / row.rate);
   }
   return {
     base: BASE_CURRENCY,
     date,
-    rates,
+    rates: roundRatesMap(rates),
     source: "frankfurter/NBKR",
   };
 }
@@ -100,5 +110,5 @@ export async function getRateToKgs(currency: string): Promise<number> {
   if (!rate || !Number.isFinite(rate)) {
     throw new Error(`No rate for ${code}`);
   }
-  return rate;
+  return roundRate(rate);
 }

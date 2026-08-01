@@ -52,7 +52,18 @@ export const transactions = sqliteTable("transactions", {
   createdAt: text("created_at").notNull(),
 });
 
+/** Currencies the user keeps on the “My currencies” screen. */
+export const userCurrencies = sqliteTable("user_currencies", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  currency: text("currency").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type Person = typeof people.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
+export type UserCurrency = typeof userCurrencies.$inferSelect;

@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchJson, type RatesResponse } from "@/lib/types";
 import { fromKgs } from "@/lib/currency";
+import { roundRate } from "@/lib/format";
 
 export function useExchangeRates() {
   return useQuery({
@@ -15,10 +16,11 @@ export function useExchangeRates() {
 
 export function useRateToKgs(currency: string) {
   const { data, ...rest } = useExchangeRates();
-  const rate =
+  const raw =
     currency.toUpperCase() === "KGS"
       ? 1
       : data?.rates[currency.toUpperCase()] ?? null;
+  const rate = raw == null ? null : roundRate(raw);
   return { rate, date: data?.date, ...rest };
 }
 

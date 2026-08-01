@@ -6,6 +6,7 @@ import { transactions } from "@/db/schema";
 import { requireUser } from "@/lib/api";
 import { BASE_CURRENCY, isValidCurrency } from "@/lib/currency";
 import { getRateToKgs } from "@/lib/exchange";
+import { ensureUserCurrency } from "@/lib/userCurrencies";
 
 const updateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
@@ -76,6 +77,10 @@ export async function PATCH(req: Request, ctx: Ctx) {
     .set(data)
     .where(and(eq(transactions.id, id), eq(transactions.userId, authResult.userId)))
     .run();
+
+  if (data.currency) {
+    ensureUserCurrency(authResult.userId, data.currency);
+  }
 
   const updated = db.select().from(transactions).where(eq(transactions.id, id)).get();
   return NextResponse.json(updated);

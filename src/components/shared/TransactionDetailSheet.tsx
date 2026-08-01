@@ -18,7 +18,7 @@ export function TransactionDetailSheet({
   const t = useTranslations("transaction");
   const tCurr = useTranslations("currency");
   const tCommon = useTranslations("common");
-  const locale = useLocale() as "ru" | "uz";
+  const locale = useLocale();
   const router = useRouter();
   const qc = useQueryClient();
   const amount = tx.income > 0 ? tx.income : -tx.expense;
@@ -33,18 +33,18 @@ export function TransactionDetailSheet({
   });
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center">
       <button
         type="button"
         className="absolute inset-0 bg-black/40"
         aria-label={tCommon("close")}
         onClick={onClose}
       />
-      <div className="relative w-full max-w-[430px] bg-white rounded-t-[28px] px-5 pt-3 pb-8 shadow-2xl animate-sheet">
-        <div className="mx-auto w-10 h-1 rounded-full bg-[#E5E7EB] mb-4" />
+      <div className="relative w-full max-w-[430px] bg-card rounded-t-[28px] px-5 pt-3 pb-8 shadow-2xl animate-sheet">
+        <div className="mx-auto w-10 h-1 rounded-full bg-line-strong mb-4" />
         <div className="flex items-start justify-between mb-5">
           <h3 className="font-bold text-[18px]">{t("details")}</h3>
-          <button type="button" onClick={onClose} className="p-1 text-[#9CA3AF]">
+          <button type="button" onClick={onClose} className="p-1 text-muted">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -57,7 +57,7 @@ export function TransactionDetailSheet({
           />
           <div className="min-w-0">
             <div className="font-semibold text-[16px] truncate">{tx.name}</div>
-            <div className="text-[13px] text-[#9CA3AF]">
+            <div className="text-[13px] text-muted">
               {formatTxDate(tx.date, tx.createdAt, locale)}
             </div>
           </div>
@@ -99,7 +99,7 @@ export function TransactionDetailSheet({
           <Link
             href={`/transactions/${tx.id}`}
             onClick={onClose}
-            className="flex items-center justify-center gap-2 rounded-full border border-[#E5E7EB] py-3.5 font-semibold text-[14px]"
+            className="flex items-center justify-center gap-2 rounded-full border border-line-strong py-3.5 font-semibold text-[14px]"
           >
             <Pencil className="w-4 h-4" />
             {t("edit")}
@@ -123,7 +123,7 @@ export function TransactionDetailSheet({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <span className="text-[#9CA3AF] shrink-0">{label}</span>
+      <span className="text-muted shrink-0">{label}</span>
       <span className="font-medium text-right break-all">{value}</span>
     </div>
   );

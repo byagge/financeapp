@@ -1,8 +1,6 @@
 import { format, parseISO } from "date-fns";
-import { enUS, ru, uzCyrl } from "date-fns/locale";
 import { BASE_CURRENCY, currencySymbol } from "@/lib/currency";
-
-const locales = { ru, uz: uzCyrl, en: enUS } as const;
+import { dateFnsLocale } from "@/lib/locale";
 
 function formatNumber(amount: number, fractionDigits: number) {
   return new Intl.NumberFormat("ru-RU", {
@@ -57,33 +55,47 @@ export function formatKeypadAmount(raw: string, currency: string = BASE_CURRENCY
   return `${intFormatted} ${sym}`;
 }
 
+/** Round rate to max 2 decimal places. */
+export function roundRate(rate: number): number {
+  if (!Number.isFinite(rate)) return rate;
+  return Math.round(rate * 100) / 100;
+}
+
+/**
+ * Rate for display/input: max 2 decimals, trailing zeros dropped.
+ * 92.5222 → "92.52", 92.5 → "92.5", 92 → "92"
+ */
+export function formatRateValue(rate: number): string {
+  if (!Number.isFinite(rate)) return "—";
+  return String(roundRate(rate));
+}
+
 export function formatRate(rate: number, currency: string = BASE_CURRENCY) {
   if (!Number.isFinite(rate)) return "—";
-  const digits = rate >= 100 ? 2 : rate >= 1 ? 4 : 6;
-  return `1 ${currencySymbol(currency)} = ${formatNumber(rate, digits)} ${currencySymbol(BASE_CURRENCY)}`;
+  return `1 ${currencySymbol(currency)} = ${formatRateValue(rate)} ${currencySymbol(BASE_CURRENCY)}`;
 }
 
 export function formatTxDate(
   isoDate: string,
   createdAt: string,
-  locale: "ru" | "uz" = "ru"
+  locale = "ru"
 ) {
   try {
     const date = parseISO(
       createdAt.includes("T") ? createdAt : `${isoDate}T12:00:00`
     );
     return format(date, "d MMM - HH:mm", {
-      locale: locale === "uz" ? uzCyrl : ru,
+      locale: dateFnsLocale(locale),
     });
   } catch {
     return isoDate;
   }
 }
 
-export function formatDayLabel(isoDate: string, locale: "ru" | "uz" = "ru") {
+export function formatDayLabel(isoDate: string, locale = "ru") {
   try {
     return format(parseISO(isoDate), "d MMMM yyyy", {
-      locale: locales[locale],
+      locale: dateFnsLocale(locale),
     });
   } catch {
     return isoDate;

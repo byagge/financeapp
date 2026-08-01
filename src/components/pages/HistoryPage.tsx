@@ -2,62 +2,176 @@
 
 import {
   CalendarDays,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
   Search,
   X,
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useRef, useState } from "react";
-import { addDays, format, parseISO, subDays } from "date-fns";
-import { Link, useRouter } from "@/i18n/routing";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { format, isToday, isYesterday, parseISO } from "date-fns";
+import { dateFnsLocale } from "@/lib/locale";
+import { useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { Avatar } from "@/components/shared/Avatar";
-import { TransactionList } from "@/components/mobile/TransactionList";
+import { CurrencyFlag } from "@/components/shared/CurrencyFlag";
+import {
+  FinanceFlowCard,
+  buildExpenseSegments,
+} from "@/components/shared/FinanceFlowCard";
 import { TransactionSheet } from "@/components/shared/TransactionSheet";
-import { usePeople, useTransactions } from "@/hooks/useFinance";
-import { formatBalance } from "@/lib/format";
-import { formatHeaderDate } from "@/lib/period";
+import { useAnalytics, usePeople, useTransactions } from "@/hooks/useFinance";
+import { formatMoney } from "@/lib/format";
+import { getPeriodRange } from "@/lib/period";
 import { fetchJson, type TxItem } from "@/lib/types";
+import { buildRepeatQuery } from "@/lib/repeatTransaction";
 import { todayISO } from "@/lib/utils";
 
 type FilterType = "" | "income" | "expense";
 
+function parseFilterType(value: string | null): FilterType {
+  if (value === "income" || value === "expense") return value;
+  return "";
+}
+
+function daySummary(txs: TxItem[]) {
+  let income = 0;
+  let expense = 0;
+  for (const tx of txs) {
+    const rate = tx.exchangeRate || 1;
+    income += (tx.income || 0) * rate;
+    expense += (tx.expense || 0) * rate;
+  }
+  return { income, expense, total: income - expense };
+}
+
+/** Compact signed amount for day headers: −1 / 0 / +1 */
+function formatDayAmount(amount: number) {
+  const abs = Math.abs(amount);
+  const formatted = new Intl.NumberFormat("ru-RU", {
+    minimumFractionDigits: abs % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(abs);
+  if (amount > 0) return `+${formatted}`;
+  if (amount < 0) return `−${formatted}`;
+  return formatted;
+}
+
+function dateLocale(locale: string) {
+  return dateFnsLocale(locale);
+}
+
+function formatSectionDate(
+  iso: string,
+  locale: string,
+  todayLabel: string,
+  yesterdayLabel: string
+) {
+  const d = parseISO(iso);
+  const loc = dateLocale(locale);
+  if (isToday(d)) return todayLabel;
+  if (isYesterday(d)) return yesterdayLabel;
+  return format(d, "d MMMM yyyy, EEE", { locale: loc });
+}
+
+function formatHeaderShort(
+  iso: string,
+  locale: string,
+  todayLabel: string,
+  yesterdayLabel: string
+) {
+  const d = parseISO(iso);
+  const loc = dateLocale(locale);
+  if (isToday(d)) return todayLabel;
+  if (isYesterday(d)) return yesterdayLabel;
+  return format(d, "d MMMM yyyy", { locale: loc });
+}
+
 export function HistoryPage() {
   const t = useTranslations("history");
-  const tPeople = useTranslations("people");
   const tTx = useTranslations("transaction");
   const tHome = useTranslations("home");
   const tCommon = useTranslations("common");
-  const locale = useLocale() as "ru" | "uz";
+  const tAnalytics = useTranslations("analytics");
+  const locale = useLocale();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const qc = useQueryClient();
   const dateInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const scrollingToRef = useRef<string | null>(null);
 
-  const [day, setDay] = useState(todayISO());
-  const [type, setType] = useState<FilterType>("");
+  const urlType = parseFilterType(searchParams.get("type"));
+  const urlPersonId = searchParams.get("personId") || "";
+  const urlFrom = searchParams.get("from") || "";
+  const urlTo = searchParams.get("to") || "";
+
+  const [type, setType] = useState<FilterType>(urlType);
+  const [personId, setPersonId] = useState(urlPersonId);
+  const [from, setFrom] = useState(urlFrom);
+  const [to, setTo] = useState(urlTo);
   const [q, setQ] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [personId, setPersonId] = useState("");
   const [selected, setSelected] = useState<TxItem | null>(null);
+  const [headerDate, setHeaderDate] = useState(todayISO());
+
+  useEffect(() => {
+    setType(urlType);
+    setPersonId(urlPersonId);
+    setFrom(urlFrom);
+    setTo(urlTo);
+  }, [urlType, urlPersonId, urlFrom, urlTo]);
+
+  const monthRange = useMemo(() => getPeriodRange("month"), []);
+  const chartFrom = from || monthRange.from;
+  const chartTo = to || monthRange.to;
+  const { data: monthAnalytics } = useAnalytics({
+    from: chartFrom,
+    to: chartTo,
+  });
+  const { data: peopleData } = usePeople();
 
   const isSearching = showSearch && q.trim().length > 0;
 
   const params = useMemo(
     () => ({
-      date: isSearching ? undefined : day,
       type: type || undefined,
-      q: q.trim() || undefined,
       personId: personId || undefined,
+      from: from || undefined,
+      to: to || undefined,
+      q: isSearching ? q.trim() : undefined,
     }),
-    [day, type, q, personId, isSearching]
+    [type, personId, from, to, q, isSearching]
   );
 
   const { data, isLoading } = useTransactions(params);
-  const { data: peopleData } = usePeople();
+
+  const filterPersonName = useMemo(() => {
+    if (!personId) return "";
+    if (personId === "none") return tAnalytics("noPerson");
+    return peopleData?.items.find((p) => p.id === personId)?.name || "";
+  }, [personId, peopleData?.items, tAnalytics]);
+
+  const hasActiveFilters = Boolean(type || personId || from || to);
+
+  function clearFilters() {
+    setType("");
+    setPersonId("");
+    setFrom("");
+    setTo("");
+    router.replace("/history");
+  }
+
+  function setTypeFilter(next: FilterType) {
+    setType(next);
+    const qs = new URLSearchParams();
+    if (next) qs.set("type", next);
+    if (personId) qs.set("personId", personId);
+    if (from) qs.set("from", from);
+    if (to) qs.set("to", to);
+    const s = qs.toString();
+    router.replace(s ? `/history?${s}` : "/history");
+  }
 
   const del = useMutation({
     mutationFn: (id: string) =>
@@ -69,240 +183,193 @@ export function HistoryPage() {
   });
 
   const items = data?.items || [];
-  const summary = data?.summary || { income: 0, expense: 0, total: 0 };
-  const people = peopleData?.items || [];
 
-  const suggestions = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    const list: { id: string; label: string; kind: string; apply: () => void }[] =
-      [];
+  const monthSummary = monthAnalytics?.summary || { income: 0, expense: 0 };
+  const monthSegments = useMemo(
+    () =>
+      buildExpenseSegments(monthAnalytics?.byPeople || [], tAnalytics("noPerson")),
+    [monthAnalytics?.byPeople, tAnalytics]
+  );
 
-    list.push({
-      id: "type-income",
-      label: tHome("income"),
-      kind: tTx("type"),
-      apply: () => {
-        setType("income");
-        setQ("");
-      },
-    });
-    list.push({
-      id: "type-expense",
-      label: tHome("expense"),
-      kind: tTx("type"),
-      apply: () => {
-        setType("expense");
-        setQ("");
-      },
-    });
-    list.push({
-      id: "type-all",
-      label: t("all"),
-      kind: tTx("type"),
-      apply: () => {
-        setType("");
-        setQ("");
-      },
-    });
-
-    for (const p of people) {
-      list.push({
-        id: `person-${p.id}`,
-        label: p.name,
-        kind: tTx("person"),
-        apply: () => {
-          setPersonId(p.id);
-          setQ(p.name);
-        },
-      });
+  const chartTitle = useMemo(() => {
+    const loc = dateFnsLocale(locale);
+    try {
+      const a = parseISO(chartFrom);
+      const b = parseISO(chartTo);
+      const sameMonth =
+        a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+      if (sameMonth) {
+        return tAnalytics("forMonth", {
+          month: format(a, "LLLL", { locale: loc }),
+        });
+      }
+    } catch {
+      /* fall through */
     }
+    const month = format(new Date(), "LLLL", { locale: loc });
+    return tAnalytics("forMonth", { month });
+  }, [locale, tAnalytics, chartFrom, chartTo]);
 
-    if (!query) return list.slice(0, 8);
-
-    return list
-      .filter((s) => s.label.toLowerCase().includes(query))
-      .slice(0, 10);
-  }, [q, people, t, tHome, tTx]);
-
-  const byPersonExpense = useMemo(() => {
-    const map = new Map<string, number>();
+  const groups = useMemo(() => {
+    const map = new Map<string, TxItem[]>();
     for (const tx of items) {
-      if (tx.expense <= 0) continue;
-      const key = tx.personName || tx.name || tTx("none");
-      map.set(key, (map.get(key) || 0) + tx.expense * (tx.exchangeRate || 1));
+      const key = tx.date;
+      const list = map.get(key);
+      if (list) list.push(tx);
+      else map.set(key, [tx]);
     }
-    const colors = ["#EF4444", "#F97316", "#F59E0B", "#EC4899", "#9CA3AF"];
-    return [...map.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6)
-      .map(([name, value], i) => ({ name, value, color: colors[i % colors.length] }));
-  }, [items, tTx]);
+    return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+  }, [items]);
 
-  const byPersonIncome = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const tx of items) {
-      if (tx.income <= 0) continue;
-      const key = tx.personName || tx.name || tTx("none");
-      map.set(key, (map.get(key) || 0) + tx.income * (tx.exchangeRate || 1));
+  useEffect(() => {
+    if (groups.length > 0 && !scrollingToRef.current) {
+      setHeaderDate(groups[0][0]);
     }
-    const colors = ["#22C55E", "#10B981", "#14B8A6", "#4A3AFF", "#6366F1"];
-    return [...map.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6)
-      .map(([name, value], i) => ({ name, value, color: colors[i % colors.length] }));
-  }, [items, tTx]);
+  }, [groups]);
 
-  const expenseTotal = byPersonExpense.reduce((s, c) => s + c.value, 0) || 1;
-  const incomeTotal = byPersonIncome.reduce((s, c) => s + c.value, 0) || 1;
-  const flowMax = Math.max(summary.income, summary.expense, 1);
+  // Update header date while scrolling through sections
+  useEffect(() => {
+    const root = listRef.current;
+    if (!root || groups.length === 0) return;
 
-  function shiftDay(delta: number) {
-    const next = delta > 0 ? addDays(parseISO(day), 1) : subDays(parseISO(day), 1);
-    setDay(format(next, "yyyy-MM-dd"));
-  }
+    const nodes = root.querySelectorAll<HTMLElement>("[data-date-section]");
+    if (nodes.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (scrollingToRef.current) return;
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        const top = visible[0];
+        if (!top) return;
+        const date = (top.target as HTMLElement).dataset.dateSection;
+        if (date) setHeaderDate(date);
+      },
+      {
+        root: null,
+        rootMargin: "-100px 0px -55% 0px",
+        threshold: [0, 0.1, 0.5],
+      }
+    );
+
+    nodes.forEach((n) => observer.observe(n));
+    return () => observer.disconnect();
+  }, [groups, isLoading]);
 
   function openCalendar() {
     const el = dateInputRef.current;
     if (!el) return;
-    if (typeof el.showPicker === "function") {
-      try {
-        el.showPicker();
-        return;
-      } catch {
-        /* fallback */
-      }
+    try {
+      el.showPicker?.();
+    } catch {
+      el.click();
     }
-    el.click();
   }
 
-  function openSearch() {
-    setShowSearch(true);
-    setTimeout(() => searchInputRef.current?.focus(), 50);
+  function scrollToDate(iso: string) {
+    setHeaderDate(iso);
+    const el = listRef.current?.querySelector<HTMLElement>(
+      `[data-date-section="${iso}"]`
+    );
+    if (!el) return;
+    scrollingToRef.current = iso;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => {
+      scrollingToRef.current = null;
+    }, 700);
   }
 
-  function closeSearch() {
+  function onPickDate(value: string) {
+    if (!value) return;
     setShowSearch(false);
     setQ("");
+    const exists = groups.some(([d]) => d === value);
+    if (exists) {
+      scrollToDate(value);
+      return;
+    }
+    // No deals that day — jump to nearest earlier date, or stay
+    const earlier = groups.find(([d]) => d <= value);
+    if (earlier) scrollToDate(earlier[0]);
+    else if (groups.length) scrollToDate(groups[groups.length - 1][0]);
+    else setHeaderDate(value);
   }
 
   return (
-    <div className="space-y-5 pb-4">
-      <header className="flex items-center justify-between pt-1 gap-2">
-        <div className="relative">
-          <button
-            type="button"
-            onClick={openCalendar}
-            className="w-10 h-10 rounded-xl border border-[#E5E7EB] bg-white flex items-center justify-center"
-            aria-label={t("pickDate")}
-          >
-            <CalendarDays className="w-[18px] h-[18px] text-[#6B7280]" />
-          </button>
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={day}
-            onChange={(e) => {
-              if (e.target.value) {
-                setDay(e.target.value);
-                setShowSearch(false);
-                setQ("");
-              }
-            }}
-            className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
-            tabIndex={-1}
-            aria-hidden
-          />
-        </div>
+    <div className="pb-4">
+      <header className="sticky top-0 z-30 -mx-5 px-5 pt-1 pb-3 bg-background/95 backdrop-blur-md border-b border-line/80">
+        <div className="flex items-center justify-between gap-2">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={openCalendar}
+              className="w-11 h-11 rounded-xl border border-line-strong bg-card flex items-center justify-center"
+              aria-label={t("pickDate")}
+            >
+              <CalendarDays className="w-5 h-5 text-muted-strong" />
+            </button>
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={headerDate}
+              onChange={(e) => onPickDate(e.target.value)}
+              className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
+              tabIndex={-1}
+              aria-hidden
+            />
+          </div>
 
-        <div className="flex items-center gap-2 font-semibold text-[14px] min-w-0">
-          <button type="button" onClick={() => shiftDay(-1)} className="p-1 text-[#9CA3AF] shrink-0">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
           <button
             type="button"
             onClick={openCalendar}
-            className="capitalize min-w-0 text-center truncate hover:text-[#4A3AFF] transition-colors"
+            className="flex-1 min-w-0 text-center font-bold text-[17px] capitalize tracking-[-0.02em] truncate px-2"
             title={t("pickDate")}
           >
-            {formatHeaderDate(parseISO(day), locale)}
+            {formatHeaderShort(headerDate, locale, t("today"), t("yesterday"))}
           </button>
-          <button type="button" onClick={() => shiftDay(1)} className="p-1 text-[#9CA3AF] shrink-0">
-            <ChevronRight className="w-5 h-5" />
+
+          <button
+            type="button"
+            onClick={() => {
+              if (showSearch) {
+                setShowSearch(false);
+                setQ("");
+              } else {
+                setShowSearch(true);
+                setTimeout(() => searchInputRef.current?.focus(), 50);
+              }
+            }}
+            className={`w-11 h-11 rounded-xl border flex items-center justify-center transition-colors ${
+              showSearch
+                ? "border-[#4A3AFF] bg-primary-soft text-[#4A3AFF]"
+                : "border-line-strong bg-card text-muted-strong"
+            }`}
+            aria-label={t("search")}
+          >
+            {showSearch ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => (showSearch ? closeSearch() : openSearch())}
-          className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-colors ${
-            showSearch
-              ? "border-[#4A3AFF] bg-[#EEECFF] text-[#4A3AFF]"
-              : "border-[#E5E7EB] bg-white text-[#6B7280]"
-          }`}
-          aria-label={t("search")}
-        >
-          {showSearch ? <X className="w-[18px] h-[18px]" /> : <Search className="w-[18px] h-[18px]" />}
-        </button>
-      </header>
-
-      {showSearch && (
-        <div className="bg-white rounded-[22px] shadow-[0_8px_24px_rgba(17,24,39,0.06)] overflow-hidden animate-fade-in border border-[#EEF0F5]">
-          <div className="flex items-center gap-2 px-3.5 py-3 border-b border-[#EEF0F5]">
-            <Search className="w-4 h-4 text-[#9CA3AF] shrink-0" />
+        {showSearch && (
+          <div className="mt-3 bg-card rounded-2xl border border-line px-3.5 py-3 flex items-center gap-2">
+            <Search className="w-4 h-4 text-muted shrink-0" />
             <input
               ref={searchInputRef}
-              autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={t("searchHint")}
-              className="flex-1 min-w-0 bg-transparent outline-none text-[14px] font-medium"
+              className="flex-1 min-w-0 bg-transparent outline-none text-[15px] font-medium"
             />
             {q && (
-              <button
-                type="button"
-                onClick={() => setQ("")}
-                className="p-1 text-[#9CA3AF]"
-                aria-label={t("clear")}
-              >
+              <button type="button" onClick={() => setQ("")} className="p-1 text-muted">
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
+        )}
 
-          {!isSearching && (
-            <div className="p-3 space-y-2">
-              <div className="text-[11px] font-semibold text-[#9CA3AF] px-1 uppercase tracking-wide">
-                {t("searchSuggestions")}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {suggestions.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={s.apply}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F6FA] px-3 py-1.5 text-[12px] font-medium text-[#374151] hover:bg-[#EEECFF] hover:text-[#4A3AFF] transition-colors"
-                  >
-                    <span className="text-[#9CA3AF] text-[10px]">{s.kind}</span>
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {isSearching && (
-            <div className="px-3.5 py-2.5 text-[12px] text-[#9CA3AF] border-t border-[#EEF0F5]">
-              {t("searchResults")}
-              {!isLoading && (
-                <span className="ml-1 font-semibold text-[#6B7280]">· {items.length}</span>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {!showSearch && (
-        <div className="flex gap-2 overflow-x-auto scrollbar-none">
+        <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-none">
           {(
             [
               { id: "" as FilterType, label: t("all") },
@@ -313,231 +380,160 @@ export function HistoryPage() {
             <button
               key={f.id || "all"}
               type="button"
-              onClick={() => setType(f.id)}
-              className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold transition-colors ${
+              onClick={() => setTypeFilter(f.id)}
+              className={`shrink-0 rounded-full px-4 py-2.5 text-[14px] font-semibold transition-colors ${
                 type === f.id
                   ? "bg-[#111827] text-white"
-                  : "bg-[#EEF0F5] text-[#6B7280]"
+                  : "bg-card text-muted-strong border border-line-strong"
               }`}
             >
               {f.label}
             </button>
           ))}
         </div>
-      )}
 
-      {!isSearching && (
-        <>
-          {/* Quick Send */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-[16px]">{tPeople("quickSend")}</h3>
-              <Link
-                href="/people"
-                className="inline-flex items-center gap-1 bg-white border border-[#E5E7EB] rounded-full px-3 py-1.5 text-[12px] font-semibold"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                {tPeople("add")}
-              </Link>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
-              {people.map((p) => {
-                const active = personId === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className="flex flex-col items-center gap-2 min-w-[64px]"
-                    onClick={() => setPersonId(active ? "" : p.id)}
-                  >
-                    <span className="relative">
-                      <Avatar name={p.name} color={p.avatarColor} size={56} />
-                      {active && (
-                        <span className="absolute -bottom-0.5 -right-0.5 w-[18px] h-[18px] rounded-full bg-[#22C55E] border-[2.5px] border-[#F5F6FA] flex items-center justify-center">
-                          <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-[11px] text-[#6B7280] font-medium truncate max-w-[64px]">
-                      {p.name}
-                    </span>
-                  </button>
-                );
-              })}
-              {people.length === 0 && (
-                <div className="text-sm text-[#9CA3AF] py-3">{tPeople("empty")}</div>
-              )}
-            </div>
-
-            {personId && (
-              <button
-                type="button"
-                onClick={() =>
-                  router.push(`/transactions/new?personId=${personId}&type=expense`)
-                }
-                className="mt-4 w-full bg-[#0B0B0B] text-white rounded-full py-[15px] font-semibold animate-fade-in shadow-[0_12px_28px_rgba(0,0,0,0.15)]"
-              >
-                {tTx("continue")}
-              </button>
+        {hasActiveFilters && (personId || from || to) && (
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
+            {filterPersonName && (
+              <span className="inline-flex items-center rounded-full bg-primary-soft text-[#4A3AFF] px-3 py-1.5 text-[13px] font-semibold">
+                {filterPersonName}
+              </span>
             )}
+            {from && to && (
+              <span className="inline-flex items-center rounded-full bg-background text-muted-strong px-3 py-1.5 text-[13px] font-semibold">
+                {from === to
+                  ? format(parseISO(from), "dd.MM.yyyy")
+                  : `${format(parseISO(from), "dd.MM")} – ${format(parseISO(to), "dd.MM")}`}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-semibold text-[#EF4444]"
+            >
+              {t("clear")}
+            </button>
           </div>
+        )}
+      </header>
 
-          {/* Chart summary */}
-          <div className="bg-white rounded-[24px] p-4 shadow-[0_8px_24px_rgba(17,24,39,0.04)] space-y-3">
-            {type === "" && (
-              <>
-                <div className="text-[13px] text-[#9CA3AF] font-medium">{t("flowChart")}</div>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex items-center justify-between text-[13px] mb-1.5">
-                      <span className="font-medium text-[#16A34A]">{tHome("income")}</span>
-                      <span className="font-bold tabular-nums">
-                        {formatBalance(summary.income, locale)}
-                      </span>
-                    </div>
-                    <div className="h-2.5 rounded-full bg-[#EEF0F5] overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-[#22C55E] transition-all"
-                        style={{
-                          width: `${Math.max((summary.income / flowMax) * 100, summary.income > 0 ? 4 : 0)}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between text-[13px] mb-1.5">
-                      <span className="font-medium text-[#EF4444]">{tHome("expense")}</span>
-                      <span className="font-bold tabular-nums">
-                        {formatBalance(summary.expense, locale)}
-                      </span>
-                    </div>
-                    <div className="h-2.5 rounded-full bg-[#EEF0F5] overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-[#EF4444] transition-all"
-                        style={{
-                          width: `${Math.max((summary.expense / flowMax) * 100, summary.expense > 0 ? 4 : 0)}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {type === "income" && (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#9CA3AF] font-medium">{t("incomeChart")}</span>
-                  <span className="font-bold text-[15px] text-[#16A34A]">
-                    {formatBalance(summary.income, locale)}
-                  </span>
-                </div>
-                <div className="h-2.5 rounded-full bg-[#EEF0F5] overflow-hidden flex">
-                  {byPersonIncome.length === 0 ? (
-                    <div className="w-full h-full bg-[#EEF0F5]" />
-                  ) : (
-                    byPersonIncome.map((c) => (
-                      <div
-                        key={c.name}
-                        style={{
-                          width: `${(c.value / incomeTotal) * 100}%`,
-                          background: c.color,
-                        }}
-                        className="h-full first:rounded-l-full last:rounded-r-full"
-                      />
-                    ))
-                  )}
-                </div>
-                {byPersonIncome.length > 0 && (
-                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                    {byPersonIncome.map((c) => (
-                      <div
-                        key={c.name}
-                        className="flex items-center gap-1.5 text-[11px] text-[#6B7280]"
-                      >
-                        <span
-                          className="w-2 h-2 rounded-full shrink-0"
-                          style={{ background: c.color }}
-                        />
-                        <span className="truncate max-w-[100px]">{c.name}</span>
-                        <span className="font-semibold tabular-nums">
-                          {formatBalance(c.value, locale)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-
-            {type === "expense" && (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#9CA3AF] font-medium">{t("spend")}</span>
-                  <span className="font-bold text-[15px] text-[#EF4444]">
-                    {formatBalance(summary.expense, locale)}
-                  </span>
-                </div>
-                <div className="h-2.5 rounded-full bg-[#EEF0F5] overflow-hidden flex">
-                  {byPersonExpense.length === 0 ? (
-                    <div className="w-full h-full bg-[#EEF0F5]" />
-                  ) : (
-                    byPersonExpense.map((c) => (
-                      <div
-                        key={c.name}
-                        style={{
-                          width: `${(c.value / expenseTotal) * 100}%`,
-                          background: c.color,
-                        }}
-                        className="h-full first:rounded-l-full last:rounded-r-full"
-                      />
-                    ))
-                  )}
-                </div>
-                {byPersonExpense.length > 0 && (
-                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                    {byPersonExpense.map((c) => (
-                      <div
-                        key={c.name}
-                        className="flex items-center gap-1.5 text-[11px] text-[#6B7280]"
-                      >
-                        <span
-                          className="w-2 h-2 rounded-full shrink-0"
-                          style={{ background: c.color }}
-                        />
-                        <span className="truncate max-w-[100px]">{c.name}</span>
-                        <span className="font-semibold tabular-nums">
-                          {formatBalance(c.value, locale)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
+      {!isSearching &&
+        !hasActiveFilters &&
+        (monthSummary.income > 0 ||
+          monthSummary.expense > 0 ||
+          monthSegments.length > 0) && (
+          <div className="pt-4">
+            <FinanceFlowCard
+              title={chartTitle}
+              income={monthSummary.income}
+              expense={monthSummary.expense}
+              segments={monthSegments}
+              locale={locale}
+              incomeLabel={tHome("income")}
+              expenseLabel={tHome("expense")}
+              showBreakdown={false}
+              onTitleClick={() => router.push("/analytics")}
+            />
           </div>
-        </>
-      )}
+        )}
 
-      {isLoading ? (
-        <div className="py-10 text-center text-[#9CA3AF]">…</div>
-      ) : items.length === 0 ? (
-        <div className="py-10 text-center text-[#9CA3AF] bg-white rounded-[24px]">
-          {t("empty")}
-        </div>
-      ) : (
-        <TransactionList
-          items={items}
-          showHeader={false}
-          onSelect={setSelected}
-        />
-      )}
+      <div ref={listRef} className="pt-4 space-y-6">
+        {isLoading ? (
+          <div className="py-16 flex items-center justify-center gap-2">
+            <span className="loader-dot" />
+            <span className="loader-dot [animation-delay:160ms]" />
+            <span className="loader-dot [animation-delay:320ms]" />
+          </div>
+        ) : groups.length === 0 ? (
+          <div className="py-16 text-center text-muted text-[15px] bg-card rounded-[24px]">
+            {t("empty")}
+          </div>
+        ) : (
+          groups.map(([date, txs]) => {
+            const day = daySummary(txs);
+            return (
+              <section
+                key={date}
+                data-date-section={date}
+                className="scroll-mt-[140px]"
+              >
+                <div className="px-0.5 mb-2.5 flex items-baseline justify-between gap-3">
+                  <h2 className="text-[14px] font-semibold text-muted-strong capitalize min-w-0 truncate">
+                    {formatSectionDate(date, locale, t("today"), t("yesterday"))}
+                  </h2>
+                  <div className="flex items-baseline gap-2.5 shrink-0 text-[13px] font-semibold tabular-nums">
+                    <span className="text-[#EF4444]">
+                      {formatDayAmount(-day.expense)}
+                    </span>
+                    <span className="text-muted">
+                      {formatDayAmount(day.total)}
+                    </span>
+                    <span className="text-[#16A34A]">
+                      {formatDayAmount(day.income)}
+                    </span>
+                  </div>
+                </div>
+                <div className="bg-card rounded-[24px] px-1.5 shadow-card overflow-hidden">
+                  {txs.map((tx) => {
+                    const amount = tx.income > 0 ? tx.income : -tx.expense;
+                    const currency = tx.currency || "KGS";
+                    return (
+                      <button
+                        key={tx.id}
+                        type="button"
+                        onClick={() => setSelected(tx)}
+                        className="w-full flex items-center gap-3 px-3 py-3.5 text-left active:bg-surface rounded-2xl min-h-[72px]"
+                      >
+                        <Avatar
+                          name={tx.personName || tx.name}
+                          color={tx.personColor || "#A5B4FC"}
+                          size={50}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-[15px] truncate leading-snug">
+                            {tx.name}
+                          </div>
+                          <div className="text-[13px] text-muted-strong mt-0.5 truncate">
+                            {tx.personName ||
+                              tx.note ||
+                              (amount >= 0 ? tTx("income") : tTx("expense"))}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0 flex items-center gap-2 pl-1">
+                          <div>
+                            <div
+                              className={`font-semibold text-[15px] tabular-nums ${
+                                amount >= 0 ? "text-[#16A34A]" : "text-[#EF4444]"
+                              }`}
+                            >
+                              {formatMoney(amount, locale, currency)}
+                            </div>
+                            <div className="text-[12px] text-muted mt-0.5 flex items-center justify-end gap-1">
+                              {currency}
+                            </div>
+                          </div>
+                          <CurrencyFlag code={currency} size={28} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })
+        )}
+      </div>
 
       {selected && (
         <TransactionSheet
           tx={selected}
           onClose={() => setSelected(null)}
           onEdit={() => router.push(`/transactions/${selected.id}`)}
+          onRepeat={() => {
+            const qs = buildRepeatQuery(selected);
+            setSelected(null);
+            router.push(`/transactions/new?${qs}`);
+          }}
           onDelete={() => {
             if (confirm(tCommon("confirmDelete"))) del.mutate(selected.id);
           }}

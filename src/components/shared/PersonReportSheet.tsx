@@ -26,7 +26,7 @@ export function PersonReportSheet({
   const tPeople = useTranslations("people");
   const tHome = useTranslations("home");
   const tCommon = useTranslations("common");
-  const locale = useLocale() as "ru" | "uz";
+  const locale = useLocale();
   const [period, setPeriod] = useState<Period>("month");
   const range = getPeriodRange(period);
 
@@ -45,27 +45,27 @@ export function PersonReportSheet({
   );
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center lg:items-center">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center lg:items-center">
       <button
         type="button"
         className="absolute inset-0 bg-black/40"
         aria-label={tCommon("close")}
         onClick={onClose}
       />
-      <div className="relative w-full max-w-[430px] max-h-[88dvh] overflow-y-auto bg-white rounded-t-[28px] lg:rounded-[28px] px-5 pt-3 pb-8 shadow-2xl animate-sheet">
-        <div className="mx-auto w-10 h-1 rounded-full bg-[#E5E7EB] mb-4 lg:hidden" />
+      <div className="relative z-[110] w-full max-w-[430px] max-h-[88dvh] overflow-y-auto bg-card rounded-t-[28px] lg:rounded-[28px] px-5 pt-3 pb-8 shadow-2xl animate-sheet">
+        <div className="mx-auto w-10 h-1 rounded-full bg-line-strong mb-4 lg:hidden" />
 
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3 min-w-0">
             <Avatar name={person.name} color={person.avatarColor} size={48} />
             <div className="min-w-0">
               <h3 className="font-bold text-[18px] truncate">{person.name}</h3>
-              <p className="text-[12px] text-[#9CA3AF] capitalize">
+              <p className="text-[12px] text-muted capitalize">
                 {tPeople("report")}: {formatPeriodLabel(period, locale)}
               </p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="p-1 text-[#9CA3AF] shrink-0">
+          <button type="button" onClick={onClose} className="p-1 text-muted shrink-0">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -89,7 +89,7 @@ export function PersonReportSheet({
                 className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${
                   active
                     ? "bg-[#4A3AFF] text-white"
-                    : "bg-[#F5F6FA] text-[#6B7280]"
+                    : "bg-background text-muted-strong"
                 }`}
               >
                 {label}
@@ -99,9 +99,9 @@ export function PersonReportSheet({
         </div>
 
         {isLoading ? (
-          <div className="py-16 text-center text-[#9CA3AF]">{tCommon("loading")}</div>
+          <div className="py-16 text-center text-muted">{tCommon("loading")}</div>
         ) : report.count === 0 ? (
-          <div className="py-14 text-center text-[#9CA3AF] text-sm">{t("empty")}</div>
+          <div className="py-14 text-center text-muted text-sm">{t("empty")}</div>
         ) : (
           <div className="space-y-5">
             <div
@@ -156,7 +156,7 @@ export function PersonReportSheet({
 
             <section className="space-y-2">
               <h4 className="font-semibold text-[14px]">{t("byDates")}</h4>
-              <div className="bg-[#F8F9FC] rounded-[20px] divide-y divide-[#EEF0F5] overflow-hidden">
+              <div className="bg-[#F8F9FC] rounded-[20px] divide-y divide-line overflow-hidden">
                 {report.byDate.map((d) => (
                   <div key={d.date} className="px-3.5 py-3 space-y-2">
                     <div className="flex items-center justify-between gap-3">
@@ -164,7 +164,7 @@ export function PersonReportSheet({
                         <div className="font-semibold text-[13px] capitalize">
                           {formatDayLabel(d.date, locale)}
                         </div>
-                        <div className="text-[11px] text-[#9CA3AF]">
+                        <div className="text-[11px] text-muted">
                           {d.count} {t("operations").toLowerCase()}
                         </div>
                       </div>
@@ -176,7 +176,7 @@ export function PersonReportSheet({
                         {formatBalance(d.total, locale)}
                       </div>
                     </div>
-                    <div className="flex gap-1 h-1.5 rounded-full overflow-hidden bg-[#EEF0F5]">
+                    <div className="flex gap-1 h-1.5 rounded-full overflow-hidden bg-surface">
                       {d.income > 0 && (
                         <div
                           className="h-full bg-[#22C55E]"
@@ -326,10 +326,10 @@ function FlowBar({
   return (
     <div>
       <div className="flex items-center justify-between text-[13px] mb-1.5">
-        <span className="text-[#6B7280] font-medium">{label}</span>
+        <span className="text-muted-strong font-medium">{label}</span>
         <span className="font-bold tabular-nums">{formatBalance(value, locale)}</span>
       </div>
-      <div className="h-2 rounded-full bg-[#EEF0F5] overflow-hidden">
+      <div className="h-2 rounded-full bg-surface overflow-hidden">
         <div
           className="h-full rounded-full transition-all"
           style={{
@@ -345,7 +345,7 @@ function FlowBar({
 function Stat({
   label,
   value,
-  tone = "text-[#111827]",
+  tone = "text-foreground",
 }: {
   label: string;
   value: string;
@@ -353,7 +353,7 @@ function Stat({
 }) {
   return (
     <div className="bg-[#F8F9FC] rounded-[16px] px-3.5 py-3">
-      <div className="text-[10px] text-[#9CA3AF] font-medium mb-1">{label}</div>
+      <div className="text-[10px] text-muted font-medium mb-1">{label}</div>
       <div className={`text-[14px] font-bold tabular-nums truncate ${tone}`}>{value}</div>
     </div>
   );
@@ -365,29 +365,29 @@ function TopList({
   positive,
 }: {
   items: { id: string; name: string; amount: number; date: string; note: string }[];
-  locale: "ru" | "uz";
+  locale: string;
   positive: boolean;
 }) {
   const t = useTranslations("analytics");
 
   if (items.length === 0) {
     return (
-      <div className="bg-[#F8F9FC] rounded-[20px] py-6 text-center text-[#9CA3AF] text-sm">
+      <div className="bg-[#F8F9FC] rounded-[20px] py-6 text-center text-muted text-sm">
         {t("empty")}
       </div>
     );
   }
 
   return (
-    <div className="bg-[#F8F9FC] rounded-[20px] divide-y divide-[#EEF0F5] overflow-hidden">
+    <div className="bg-[#F8F9FC] rounded-[20px] divide-y divide-line overflow-hidden">
       {items.map((item, i) => (
         <div key={item.id} className="flex items-center gap-3 px-3.5 py-3">
-          <div className="w-6 h-6 rounded-full bg-white text-[#6B7280] text-[11px] font-bold flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-full bg-card text-muted-strong text-[11px] font-bold flex items-center justify-center shrink-0">
             {i + 1}
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-[13px] truncate">{item.name}</div>
-            <div className="text-[11px] text-[#9CA3AF] truncate">
+            <div className="text-[11px] text-muted truncate">
               {formatDayLabel(item.date, locale)}
               {item.note ? ` · ${item.note}` : ""}
             </div>

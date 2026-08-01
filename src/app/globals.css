@@ -2,23 +2,62 @@
 
 :root {
   --bg: #f5f6fa;
+  --surface: #eef0f5;
   --card: #ffffff;
   --ink: #111827;
   --muted: #9ca3af;
+  --muted-strong: #6b7280;
   --primary: #4a3aff;
   --primary-soft: #eeecff;
   --success: #22c55e;
+  --success-strong: #16a34a;
   --danger: #ef4444;
   --line: #eef0f5;
+  --line-strong: #e5e7eb;
+  --overlay: rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 8px 24px rgba(17, 24, 39, 0.04);
   --background: var(--bg);
   --foreground: var(--ink);
+  color-scheme: light;
 }
+
+.dark {
+  --bg: #0c0d10;
+  --surface: #1a1b20;
+  --card: #15161a;
+  --ink: #f3f4f6;
+  --muted: #a1a1aa;
+  --muted-strong: #d4d4d8;
+  --primary: #7c6bff;
+  --primary-soft: #2a2750;
+  --success: #22c55e;
+  --success-strong: #22c55e;
+  --danger: #f87171;
+  --line: #26272d;
+  --line-strong: #32333a;
+  --overlay: rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --background: var(--bg);
+  --foreground: var(--ink);
+  color-scheme: dark;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-surface: var(--surface);
   --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
   --color-muted: var(--muted);
+  --color-muted-strong: var(--muted-strong);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-danger: var(--danger);
   --font-sans: var(--font-plus-jakarta);
 }
 
@@ -45,6 +84,19 @@ select,
 button,
 textarea {
   font: inherit;
+  color: inherit;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea,
+select {
+  color: var(--ink);
+  background-color: transparent;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
 }
 
 .app-shell {
@@ -116,11 +168,36 @@ textarea {
   animation: fade-in 0.25s ease-out;
 }
 
+.loader-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ink);
+  animation: loader-pulse 1s ease-in-out infinite;
+}
+
+@keyframes loader-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
   border-radius: 999px;
+}
+
+.shadow-card {
+  box-shadow: var(--shadow-card);
 }

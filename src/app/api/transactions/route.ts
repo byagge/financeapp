@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, desc, eq, gte, like, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, like, lte, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { db } from "@/db";
@@ -7,6 +7,7 @@ import { categories, people, transactions } from "@/db/schema";
 import { requireUser } from "@/lib/api";
 import { BASE_CURRENCY, isValidCurrency } from "@/lib/currency";
 import { getRateToKgs } from "@/lib/exchange";
+import { ensureUserCurrency } from "@/lib/userCurrencies";
 import { nowISO, todayISO } from "@/lib/utils";
 
 const createSchema = z.object({
@@ -43,7 +44,11 @@ export async function GET(req: Request) {
     if (to) conditions.push(lte(transactions.date, to));
   }
 
-  if (personId) conditions.push(eq(transactions.personId, personId));
+  if (personId === "none") {
+    conditions.push(isNull(transactions.personId));
+  } else if (personId) {
+    conditions.push(eq(transactions.personId, personId));
+  }
   if (categoryId) conditions.push(eq(transactions.categoryId, categoryId));
   if (q) {
     const term = q.trim();
@@ -158,5 +163,6 @@ export async function POST(req: Request) {
   };
 
   db.insert(transactions).values(row).run();
+  ensureUserCurrency(authResult.userId, currency);
   return NextResponse.json(row, { status: 201 });
 }

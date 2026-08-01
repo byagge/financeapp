@@ -2,7 +2,8 @@
 
 import { Check, ChevronDown, Search } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import { CurrencyFlag } from "@/components/shared/CurrencyFlag";
 import {
   PRIMARY_CURRENCIES,
   searchCurrencies,
@@ -15,11 +16,19 @@ export function CurrencyPicker({
   rate,
   onChange,
   compact,
+  preferred,
+  children,
 }: {
   value: string;
   rate: number | null;
   onChange: (code: string) => void;
   compact?: boolean;
+  /** User wallet currencies — pinned at the top of the list. */
+  preferred?: string[];
+  children?: (args: {
+    selected: CurrencyInfo;
+    open: () => void;
+  }) => ReactNode;
 }) {
   const t = useTranslations("currency");
   const locale = useLocale();
@@ -28,97 +37,133 @@ export function CurrencyPicker({
 
   const selected = useMemo(() => {
     const list = searchCurrencies("", locale);
-    return list.find((c) => c.code === value) || {
-      code: value,
-      name: value,
-      nameEn: value,
-      symbol: value,
-      digits: 2,
-      primary: false,
-    };
+    return (
+      list.find((c) => c.code === value) || {
+        code: value,
+        name: value,
+        nameEn: value,
+        nameRu: value,
+        nameUz: value,
+        symbol: value,
+        digits: 2,
+        primary: false,
+      }
+    );
   }, [value, locale]);
 
   const results = useMemo(() => searchCurrencies(q, locale), [q, locale]);
-  const primary = useMemo(
+
+  const preferredCodes = useMemo(() => {
+    const fromWallets = (preferred || []).map((c) => c.toUpperCase());
+    const fallback = [...PRIMARY_CURRENCIES];
+    const merged = [...fromWallets];
+    for (const code of fallback) {
+      if (!merged.includes(code)) merged.push(code);
+    }
+    return merged;
+  }, [preferred]);
+
+  const preferredSet = useMemo(
+    () => new Set(preferredCodes),
+    [preferredCodes]
+  );
+
+  const pinned = useMemo(
     () =>
-      PRIMARY_CURRENCIES.map((code) =>
-        results.find((c) => c.code === code)
-      ).filter(Boolean) as CurrencyInfo[],
-    [results]
+      preferredCodes
+        .map((code) => results.find((c) => c.code === code))
+        .filter(Boolean) as CurrencyInfo[],
+    [preferredCodes, results]
   );
+
   const others = useMemo(
-    () => results.filter((c) => !(PRIMARY_CURRENCIES as readonly string[]).includes(c.code)),
-    [results]
+    () => results.filter((c) => !preferredSet.has(c.code)),
+    [results, preferredSet]
   );
+
+  const listItems = useMemo(
+    () => (q ? results : [...pinned, ...others]),
+    [q, results, pinned, others]
+  );
+
+  function openSheet() {
+    setOpen(true);
+  }
+
+  function pick(code: string) {
+    onChange(code);
+    setOpen(false);
+    setQ("");
+  }
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className={`w-full bg-white rounded-[16px] px-3 py-2.5 flex items-center justify-between gap-2 shadow-[0_4px_14px_rgba(17,24,39,0.04)] text-left ${
-          compact ? "" : ""
-        }`}
-      >
-        <div className="min-w-0">
-          <div className="text-[10px] text-[#9CA3AF]">{t("label")}</div>
-          <div className="font-semibold text-[13px] truncate">
-            {selected.code} · {selected.symbol}
-          </div>
-          {rate != null && value !== "KGS" && (
-            <div className="text-[10px] text-[#6B7280] mt-0.5 truncate">
-              {formatRate(rate, value)}
+      {children ? (
+        children({ selected, open: openSheet })
+      ) : (
+        <button
+          type="button"
+          onClick={openSheet}
+          className={`w-full bg-card rounded-[16px] px-3 py-2.5 flex items-center justify-between gap-2 shadow-card text-left ${
+            compact ? "" : ""
+          }`}
+        >
+          <div className="min-w-0">
+            <div className="text-[10px] text-muted">{t("label")}</div>
+            <div className="font-semibold text-[13px] truncate">
+              {selected.name}
             </div>
-          )}
-          {value === "KGS" && (
-            <div className="text-[10px] text-[#6B7280] mt-0.5">{t("baseRate")}</div>
-          )}
-        </div>
-        <ChevronDown className="w-4 h-4 text-[#9CA3AF] shrink-0" />
-      </button>
+            <div className="text-[10px] text-muted-strong mt-0.5 truncate">
+              {selected.code}
+              {rate != null && value !== "KGS"
+                ? ` · ${formatRate(rate, value)}`
+                : value === "KGS"
+                  ? ` · ${t("baseRate")}`
+                  : ""}
+            </div>
+          </div>
+          <ChevronDown className="w-4 h-4 text-muted shrink-0" />
+        </button>
+      )}
 
       {open && (
         <>
           <button
             type="button"
-            className="fixed inset-0 z-40 bg-black/30"
+            className="fixed inset-0 z-[100] bg-black/30"
             aria-label={t("close")}
             onClick={() => setOpen(false)}
           />
-          <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-xl rounded-t-[24px] bg-white shadow-2xl max-h-[75dvh] flex flex-col animate-sheet">
-            <div className="px-4 pt-3 pb-2 border-b border-[#EEF0F5]">
-              <div className="mx-auto w-10 h-1 rounded-full bg-[#E5E7EB] mb-3" />
+          <div className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-xl rounded-t-[24px] bg-card shadow-2xl max-h-[75dvh] flex flex-col animate-sheet">
+            <div className="px-4 pt-3 pb-2 border-b border-line">
+              <div className="mx-auto w-10 h-1 rounded-full bg-line-strong mb-3" />
               <div className="font-bold text-[16px] mb-3">{t("title")}</div>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder={t("search")}
-                  className="w-full rounded-full bg-[#F5F6FA] pl-9 pr-4 py-2.5 text-[14px] outline-none"
+                  className="w-full rounded-full bg-background pl-9 pr-4 py-2.5 text-[14px] outline-none"
                   autoFocus
                 />
               </div>
-              {!q && (
+              {!q && pinned.length > 0 && (
                 <div className="flex gap-2 overflow-x-auto pt-3 pb-1 scrollbar-none">
-                  {primary.map((c) => {
+                  {pinned.map((c) => {
                     const active = c.code === value;
                     return (
                       <button
                         key={c.code}
                         type="button"
-                        onClick={() => {
-                          onChange(c.code);
-                          setOpen(false);
-                          setQ("");
-                        }}
+                        onClick={() => pick(c.code)}
                         className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold border ${
                           active
-                            ? "bg-[#EEECFF] border-[#4A3AFF] text-[#4A3AFF]"
-                            : "bg-white border-[#E5E7EB] text-[#374151]"
+                            ? "bg-primary-soft border-[#4A3AFF] text-[#4A3AFF]"
+                            : "bg-card border-line-strong text-muted-strong"
                         }`}
                       >
-                        {c.code}
+                        {c.symbol || c.code}
                       </button>
                     );
                   })}
@@ -126,34 +171,44 @@ export function CurrencyPicker({
               )}
             </div>
             <div className="overflow-y-auto flex-1 px-2 py-2">
-              {(q ? results : others).map((c) => {
+              {listItems.map((c, i) => {
                 const active = c.code === value;
+                const showDivider =
+                  !q &&
+                  pinned.length > 0 &&
+                  i === pinned.length &&
+                  others.length > 0;
                 return (
-                  <button
-                    key={c.code}
-                    type="button"
-                    onClick={() => {
-                      onChange(c.code);
-                      setOpen(false);
-                      setQ("");
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left ${
-                      active ? "bg-[#EEECFF]" : "active:bg-[#F5F6FA]"
-                    }`}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-[#F5F6FA] flex items-center justify-center text-[11px] font-bold text-[#4A3AFF]">
-                      {c.symbol.length <= 2 ? c.symbol : c.code.slice(0, 2)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-[14px]">{c.code}</div>
-                      <div className="text-[12px] text-[#9CA3AF] truncate">{c.name}</div>
-                    </div>
-                    {active && <Check className="w-4 h-4 text-[#4A3AFF]" />}
-                  </button>
+                  <div key={c.code}>
+                    {showDivider && (
+                      <div className="mx-3 my-2 border-t border-line" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => pick(c.code)}
+                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left ${
+                        active ? "bg-primary-soft" : "active:bg-background"
+                      }`}
+                    >
+                      <CurrencyFlag code={c.code} size={40} />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-[14px] truncate">
+                          {c.name}
+                        </div>
+                        <div className="text-[12px] text-muted truncate">
+                          {c.code}
+                          {c.symbol ? ` · ${c.symbol}` : ""}
+                        </div>
+                      </div>
+                      {active && <Check className="w-4 h-4 text-[#4A3AFF]" />}
+                    </button>
+                  </div>
                 );
               })}
-              {results.length === 0 && (
-                <div className="text-center text-sm text-[#9CA3AF] py-10">{t("empty")}</div>
+              {listItems.length === 0 && (
+                <div className="text-center text-sm text-muted py-10">
+                  {t("empty")}
+                </div>
               )}
             </div>
           </div>

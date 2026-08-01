@@ -18,13 +18,13 @@ export function DayTotal({
   const locale = useLocale();
 
   return (
-    <div className="rounded-[24px] bg-white px-5 py-4 shadow-[0_8px_24px_rgba(17,24,39,0.04)]">
+    <div className="rounded-[24px] bg-card px-5 py-4 shadow-card">
       <div className="flex items-center justify-between gap-4">
         <div>
           {label && (
-            <div className="text-[13px] text-[#9CA3AF] font-medium">{label}</div>
+            <div className="text-[13px] text-muted font-medium">{label}</div>
           )}
-          <div className="text-[24px] font-bold tracking-[-0.03em] tabular-nums text-[#111827] mt-0.5">
+          <div className="text-[24px] font-bold tracking-[-0.03em] tabular-nums text-foreground mt-0.5">
             {formatBalance(total, locale)}
           </div>
         </div>

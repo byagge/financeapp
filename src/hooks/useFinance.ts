@@ -19,6 +19,16 @@ export function usePeople() {
   });
 }
 
+export function useUserCurrencies() {
+  return useQuery({
+    queryKey: ["user-currencies"],
+    queryFn: () =>
+      fetchJson<{ items: { id: string; currency: string; createdAt: string }[] }>(
+        "/api/currencies"
+      ),
+  });
+}
+
 export function useCategories() {
   return useQuery({
     queryKey: ["categories"],

@@ -11,6 +11,7 @@ import { usePeople } from "@/hooks/useFinance";
 import { useRateToKgs } from "@/hooks/useExchangeRates";
 import { BASE_CURRENCY } from "@/lib/currency";
 import { fetchJson } from "@/lib/types";
+import { formatRateValue, roundRate } from "@/lib/format";
 import { todayISO } from "@/lib/utils";
 
 type FormState = {
@@ -50,7 +51,9 @@ export function TransactionForm({
     date: initial?.date || todayISO(),
     personId: initial?.personId || "",
     currency: initial?.currency || BASE_CURRENCY,
-    exchangeRate: initial?.exchangeRate || "1",
+    exchangeRate: formatRateValue(
+      Number(initial?.exchangeRate) || 1
+    ),
   });
   const [rateEdited, setRateEdited] = useState(Boolean(id));
   const [error, setError] = useState("");
@@ -65,7 +68,7 @@ export function TransactionForm({
       return;
     }
     if (liveRate != null) {
-      setForm((f) => ({ ...f, exchangeRate: String(liveRate) }));
+      setForm((f) => ({ ...f, exchangeRate: formatRateValue(liveRate) }));
     }
   }, [form.currency, liveRate, rateEdited]);
 
@@ -84,7 +87,7 @@ export function TransactionForm({
         income: Number(form.income) || 0,
         expense: Number(form.expense) || 0,
         currency: form.currency,
-        exchangeRate: Number(form.exchangeRate) || 1,
+        exchangeRate: roundRate(Number(form.exchangeRate) || 1),
         note: form.note.trim(),
         date: form.date,
         personId: form.personId || null,
@@ -104,6 +107,7 @@ export function TransactionForm({
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["transactions"] });
       await qc.invalidateQueries({ queryKey: ["people"] });
+      await qc.invalidateQueries({ queryKey: ["user-currencies"] });
       router.push("/");
       router.refresh();
     },
@@ -151,19 +155,19 @@ export function TransactionForm({
                 <span className="relative">
                   <Avatar name={p.name} color={p.avatarColor} size={52} />
                   {selected && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-[16px] h-[16px] rounded-full bg-[#22C55E] border-2 border-[#F5F6FA] flex items-center justify-center">
+                    <span className="absolute -bottom-0.5 -right-0.5 w-[16px] h-[16px] rounded-full bg-[#22C55E] border-2 border-background flex items-center justify-center">
                       <Check className="w-2 h-2 text-white" strokeWidth={3} />
                     </span>
                   )}
                 </span>
-                <span className="text-[10px] text-[#6B7280] font-medium truncate max-w-[58px]">
+                <span className="text-[10px] text-muted-strong font-medium truncate max-w-[58px]">
                   {p.name}
                 </span>
               </button>
             );
           })}
           {people.length === 0 && (
-            <div className="text-sm text-[#9CA3AF] py-2">{tPeople("empty")}</div>
+            <div className="text-sm text-muted py-2">{tPeople("empty")}</div>
           )}
         </div>
       </div>
@@ -177,18 +181,29 @@ export function TransactionForm({
             set({ currency: code });
           }}
         />
-        <div className="bg-white rounded-[20px] px-4 py-3 shadow-[0_6px_20px_rgba(17,24,39,0.04)]">
-          <div className="text-[11px] text-[#9CA3AF] mb-1 font-medium">
+        <div className="bg-card rounded-[20px] px-4 py-3 shadow-card">
+          <div className="text-[11px] text-muted mb-1 font-medium">
             {tCurrency("rate")}
           </div>
           <input
             type="number"
             min="0"
-            step="any"
+            step="0.01"
             value={form.exchangeRate}
             onChange={(e) => {
               setRateEdited(true);
-              set({ exchangeRate: e.target.value });
+              const raw = e.target.value.replace(",", ".");
+              const [intPart = "", decPart = ""] = raw.split(".");
+              const clipped =
+                decPart.length > 2
+                  ? `${intPart}.${decPart.slice(0, 2)}`
+                  : raw;
+              set({ exchangeRate: clipped });
+            }}
+            onBlur={() => {
+              const n = Number(form.exchangeRate);
+              if (!Number.isFinite(n) || n <= 0) return;
+              set({ exchangeRate: formatRateValue(n) });
             }}
             disabled={form.currency === BASE_CURRENCY}
             className="w-full outline-none bg-transparent text-[15px] font-semibold disabled:opacity-60"
@@ -197,8 +212,8 @@ export function TransactionForm({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-[20px] px-4 py-3 shadow-[0_6px_20px_rgba(17,24,39,0.04)]">
-          <div className="text-[11px] text-[#9CA3AF] mb-1 font-medium">{t("income")}</div>
+        <div className="bg-card rounded-[20px] px-4 py-3 shadow-card">
+          <div className="text-[11px] text-muted mb-1 font-medium">{t("income")}</div>
           <input
             type="number"
             min="0"
@@ -213,8 +228,8 @@ export function TransactionForm({
             className="w-full outline-none bg-transparent text-[15px] font-semibold"
           />
         </div>
-        <div className="bg-white rounded-[20px] px-4 py-3 shadow-[0_6px_20px_rgba(17,24,39,0.04)]">
-          <div className="text-[11px] text-[#9CA3AF] mb-1 font-medium">{t("expense")}</div>
+        <div className="bg-card rounded-[20px] px-4 py-3 shadow-card">
+          <div className="text-[11px] text-muted mb-1 font-medium">{t("expense")}</div>
           <input
             type="number"
             min="0"
@@ -231,10 +246,10 @@ export function TransactionForm({
         </div>
       </div>
 
-      <label className="bg-white rounded-[20px] px-4 py-3 flex items-center gap-3 shadow-[0_6px_20px_rgba(17,24,39,0.04)]">
+      <label className="bg-card rounded-[20px] px-4 py-3 flex items-center gap-3 shadow-card">
         <CalendarDays className="w-5 h-5 text-[#4A3AFF] shrink-0" />
         <div className="flex-1 min-w-0">
-          <div className="text-[11px] text-[#9CA3AF]">{t("date")}</div>
+          <div className="text-[11px] text-muted">{t("date")}</div>
           <input
             type="date"
             value={form.date}
@@ -249,7 +264,7 @@ export function TransactionForm({
         value={form.note}
         onChange={(e) => set({ note: e.target.value })}
         placeholder={t("note")}
-        className="w-full bg-white rounded-[20px] px-4 py-3 outline-none text-[14px] font-medium shadow-[0_6px_20px_rgba(17,24,39,0.04)]"
+        className="w-full bg-card rounded-[20px] px-4 py-3 outline-none text-[14px] font-medium shadow-card"
       />
 
       {error && <p className="text-sm text-[#EF4444]">{error}</p>}

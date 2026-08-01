@@ -70,9 +70,18 @@ function ensureSchema(sqlite: Database.Database) {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS user_currencies (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      currency TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      UNIQUE(user_id, currency)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON transactions(user_id, date);
     CREATE INDEX IF NOT EXISTS idx_people_user ON people(user_id);
     CREATE INDEX IF NOT EXISTS idx_categories_user ON categories(user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_currencies_user ON user_currencies(user_id);
   `);
 
   if (!columnExists(sqlite, "users", "role")) {

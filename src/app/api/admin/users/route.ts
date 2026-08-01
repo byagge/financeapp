@@ -12,7 +12,7 @@ const createSchema = z.object({
   name: z.string().min(1).max(100),
   email: z.string().email(),
   password: z.string().min(6).max(100),
-  locale: z.enum(["ru", "uz"]).optional(),
+  locale: z.enum(["ru", "uz", "uz-Latn", "ky", "en"]).optional(),
 });
 
 const DEFAULT_CATEGORIES = [

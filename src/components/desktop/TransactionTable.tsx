@@ -19,15 +19,15 @@ export function TransactionTable({
   const t = useTranslations("desktop");
   const tHome = useTranslations("home");
   const tCommon = useTranslations("common");
-  const locale = useLocale() as "ru" | "uz";
+  const locale = useLocale();
   const { currency, convertFromKgs } = useDisplayCurrency();
 
   return (
-    <div className="bg-white rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex flex-col min-h-[420px]">
+    <div className="bg-card rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex flex-col min-h-[420px]">
       <div className="overflow-x-auto flex-1">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-black/45 border-b border-black/5">
+            <tr className="text-left text-muted border-b border-line">
               <th className="px-5 py-4 font-medium">{t("nameCol")}</th>
               <th className="px-5 py-4 font-medium">{t("dateCol")}</th>
               <th className="px-5 py-4 font-medium text-right">{t("incomeCol")}</th>
@@ -40,7 +40,7 @@ export function TransactionTable({
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-5 py-16 text-center text-black/35">
+                <td colSpan={7} className="px-5 py-16 text-center text-muted">
                   {tHome("empty")}
                 </td>
               </tr>
@@ -48,33 +48,33 @@ export function TransactionTable({
               items.map((tx) => (
                 <tr
                   key={tx.id}
-                  className="border-b border-black/[0.04] hover:bg-[#F4FAF8] transition-colors"
+                  className="border-b border-line hover:bg-surface transition-colors"
                 >
                   <td className="px-5 py-3.5 font-medium">{tx.name}</td>
-                  <td className="px-5 py-3.5 text-black/50 whitespace-nowrap">
+                  <td className="px-5 py-3.5 text-muted-strong whitespace-nowrap">
                     {formatDayLabel(tx.date, locale)}
                   </td>
-                  <td className="px-5 py-3.5 text-right tabular-nums text-emerald-700">
+                  <td className="px-5 py-3.5 text-right tabular-nums text-[#16A34A]">
                     {tx.income > 0
                       ? formatBalance(tx.income, locale, tx.currency || "KGS")
                       : "—"}
                   </td>
-                  <td className="px-5 py-3.5 text-right tabular-nums text-black/70">
+                  <td className="px-5 py-3.5 text-right tabular-nums text-muted-strong">
                     {tx.expense > 0
                       ? formatBalance(tx.expense, locale, tx.currency || "KGS")
                       : "—"}
                   </td>
-                  <td className="px-5 py-3.5 text-black/55">
+                  <td className="px-5 py-3.5 text-muted-strong">
                     {tx.personName || "—"}
                   </td>
-                  <td className="px-5 py-3.5 text-black/45 max-w-[200px] truncate">
+                  <td className="px-5 py-3.5 text-muted max-w-[200px] truncate">
                     {tx.note || "—"}
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/transactions/${tx.id}`}
-                        className="p-2 rounded-xl hover:bg-black/5"
+                        className="p-2 rounded-xl hover:bg-surface"
                         aria-label="edit"
                       >
                         <Pencil className="w-4 h-4" />
@@ -82,7 +82,7 @@ export function TransactionTable({
                       {onDelete && (
                         <button
                           type="button"
-                          className="p-2 rounded-xl hover:bg-rose-50 text-rose-600"
+                          className="p-2 rounded-xl hover:bg-[#FEF2F2]/20 dark:hover:bg-[#7f1d1d]/30 text-rose-600"
                           onClick={() => {
                             if (confirm(tCommon("confirmDelete"))) onDelete(tx.id);
                           }}
@@ -100,7 +100,7 @@ export function TransactionTable({
         </table>
       </div>
 
-      <div className="sticky bottom-0 border-t border-[#EEF0F5] bg-white px-5 py-4 flex items-center justify-between gap-4">
+      <div className="sticky bottom-0 border-t border-line bg-card px-5 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6 text-sm ml-auto">
           <span className="text-[#16A34A] font-medium">
             +{formatBalance(convertFromKgs(summary.income), locale, currency)}

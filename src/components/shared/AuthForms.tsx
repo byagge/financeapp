@@ -6,8 +6,8 @@ import { useState } from "react";
 import { useRouter } from "@/i18n/routing";
 
 const field =
-  "w-full bg-white rounded-[22px] px-4 py-3.5 outline-none shadow-[0_8px_24px_rgba(17,24,39,0.04)] border border-[#EEF0F5]";
-const labelCls = "text-xs text-[#9CA3AF] mb-1.5 font-medium";
+  "w-full bg-card rounded-[22px] px-4 py-3.5 outline-none shadow-card border border-line text-foreground";
+const labelCls = "text-xs text-muted mb-1.5 font-medium";
 const btn =
   "w-full bg-[#4A3AFF] text-white rounded-full py-[17px] font-semibold disabled:opacity-60 shadow-[0_12px_28px_rgba(74,58,255,0.35)]";
 

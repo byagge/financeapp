@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { HistoryPage } from "@/components/pages/HistoryPage";
+import { FullScreenLoader } from "@/components/shared/FullScreenLoader";
 import { setRequestLocale } from "next-intl/server";
 
 export default async function Page({
@@ -8,5 +10,9 @@ export default async function Page({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <HistoryPage />;
+  return (
+    <Suspense fallback={<FullScreenLoader />}>
+      <HistoryPage />
+    </Suspense>
+  );
 }

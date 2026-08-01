@@ -1,166 +1,121 @@
 "use client";
 
-import { ChevronDown, Eye, EyeOff, TrendingDown, TrendingUp } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
-import { useDisplayCurrency } from "@/components/providers/DisplayCurrencyProvider";
 import {
-  DISPLAY_CURRENCIES,
-  currencySymbol,
-  type DisplayCurrency,
-} from "@/lib/currency";
+  ChevronRight,
+  Eye,
+  EyeOff,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/routing";
+import { useHideBalance } from "@/hooks/useHideBalance";
+import { BASE_CURRENCY, currencySymbol } from "@/lib/currency";
 import { formatBalance } from "@/lib/format";
-import { formatPeriodLabel, type Period } from "@/lib/period";
 
 export function BalanceCard({
   total,
   income,
   expense,
-  period,
-  onPeriodChange,
+  from,
+  to,
 }: {
   total: number;
   income: number;
   expense: number;
-  period: Period;
-  onPeriodChange: (p: Period) => void;
+  from: string;
+  to: string;
 }) {
   const t = useTranslations("home");
-  const tCurrency = useTranslations("currency");
-  const locale = useLocale() as "ru" | "uz";
-  const [hidden, setHidden] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [currencyOpen, setCurrencyOpen] = useState(false);
-  const { currency, setCurrency, convertFromKgs } = useDisplayCurrency();
+  const locale = useLocale();
+  const router = useRouter();
+  const { hidden, toggle } = useHideBalance();
+  const symbol = currencySymbol(BASE_CURRENCY);
 
-  const periods: Period[] = ["day", "week", "month", "year"];
-  const displayTotal = convertFromKgs(total);
-  const displayIncome = convertFromKgs(income);
-  const displayExpense = convertFromKgs(expense);
+  function openBalances() {
+    router.push(`/balances?from=${from}&to=${to}`);
+  }
 
   return (
-    <div className="balance-gradient relative rounded-[28px] px-5 pt-4 pb-5 text-white shadow-[0_18px_40px_rgba(46,58,180,0.28)] overflow-visible">
-      <div className="relative z-30 flex items-center justify-between gap-2">
-        <div className="relative z-30">
-          <button
-            type="button"
-            onClick={() => {
-              setOpen((v) => !v);
-              setCurrencyOpen(false);
-            }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[12px] font-medium backdrop-blur-sm capitalize"
-          >
-            {formatPeriodLabel(period, locale)}
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-          {open && (
-            <>
-              <button
-                type="button"
-                className="fixed inset-0 z-40 cursor-default"
-                aria-label="close"
-                onClick={() => setOpen(false)}
-              />
-              <div className="absolute top-full left-0 mt-2 min-w-[168px] rounded-2xl bg-white text-[#111827] shadow-[0_16px_40px_rgba(0,0,0,0.2)] overflow-hidden z-50">
-                {periods.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#F5F6FA] font-medium capitalize ${
-                      p === period ? "bg-[#EEECFF] text-[#4A3AFF]" : ""
-                    }`}
-                    onClick={() => {
-                      onPeriodChange(p);
-                      setOpen(false);
-                    }}
-                  >
-                    {formatPeriodLabel(p, locale)}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+    <div className="relative pr-3">
+      <div
+        aria-hidden
+        className="absolute top-3 bottom-3 right-0 w-10 rounded-[24px] bg-gradient-to-br from-[#312e81] to-[#6366f1] opacity-55 shadow-[0_12px_28px_rgba(46,58,180,0.18)]"
+      />
+      <div
+        aria-hidden
+        className="absolute top-1.5 bottom-1.5 right-1 w-7 rounded-[24px] bg-gradient-to-br from-[#1e3a5f] to-[#3b82f6] opacity-80"
+      />
+
+      <div
+        role="link"
+        tabIndex={0}
+        onClick={openBalances}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openBalances();
+          }
+        }}
+        className="balance-gradient relative z-10 mr-2.5 rounded-[28px] px-5 pt-5 pb-5 text-white shadow-[0_18px_40px_rgba(46,58,180,0.28)] active:scale-[0.985] transition-transform cursor-pointer"
+        aria-label={t("tapCurrencies")}
+      >
+        <div className="relative z-10 flex items-center justify-between gap-2">
+          <div className="text-[15px] text-white/80 font-medium">{t("balance")}</div>
+          <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center shrink-0 backdrop-blur-sm">
+            <ChevronRight className="w-5 h-5 text-white" strokeWidth={2.2} />
+          </div>
         </div>
 
-        <div className="relative z-30">
-          <button
-            type="button"
-            onClick={() => {
-              setCurrencyOpen((v) => !v);
-              setOpen(false);
-            }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[12px] font-medium backdrop-blur-sm"
-          >
-            {currencySymbol(currency)}
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-          {currencyOpen && (
-            <>
-              <button
-                type="button"
-                className="fixed inset-0 z-40 cursor-default"
-                aria-label="close"
-                onClick={() => setCurrencyOpen(false)}
-              />
-              <div className="absolute top-full right-0 mt-2 min-w-[168px] rounded-2xl bg-white text-[#111827] shadow-[0_16px_40px_rgba(0,0,0,0.2)] overflow-hidden z-50">
-                {DISPLAY_CURRENCIES.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#F5F6FA] font-medium ${
-                      c === currency ? "bg-[#EEECFF] text-[#4A3AFF]" : ""
-                    }`}
-                    onClick={() => {
-                      setCurrency(c as DisplayCurrency);
-                      setCurrencyOpen(false);
-                    }}
-                  >
-                    {tCurrency(`display.${c}`)} · {currencySymbol(c)}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="relative z-0 mt-6">
-        <div className="text-[13px] text-white/70 font-medium">{t("balance")}</div>
-        <div className="mt-1.5 flex items-center gap-2.5">
-          <div className="text-[34px] leading-none font-bold tracking-[-0.03em]">
+        <div className="relative z-10 mt-5 flex items-center gap-3">
+          <div className="text-[36px] leading-none font-bold tracking-[-0.03em] truncate min-w-0">
             {hidden
-              ? `•••••• ${currencySymbol(currency)}`
-              : formatBalance(displayTotal, locale, currency)}
+              ? `•••••• ${symbol}`
+              : formatBalance(total, locale, BASE_CURRENCY)}
           </div>
           <button
             type="button"
-            onClick={() => setHidden((v) => !v)}
-            className="p-1 text-white/70 hover:text-white"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggle();
+            }}
+            className="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center text-white shrink-0"
             aria-label={hidden ? t("show") : t("hide")}
           >
-            {hidden ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
+            {hidden ? (
+              <EyeOff className="w-5 h-5" />
+            ) : (
+              <Eye className="w-5 h-5" />
+            )}
           </button>
         </div>
-      </div>
 
-      <div className="relative z-0 mt-7 grid grid-cols-2 gap-3">
-        <div className="pr-3 border-r border-white/15">
-          <div className="text-[12px] text-white/65">{t("income")}</div>
-          <div className="mt-1 flex items-center gap-1.5">
-            <span className="text-[15px] font-semibold">
-              {hidden ? "•••" : formatBalance(displayIncome, locale, currency)}
-            </span>
-            <TrendingUp className="w-3.5 h-3.5 text-[#86EFAC]" />
+        <div className="relative z-10 mt-5 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-black/20 backdrop-blur-sm px-4 py-3.5">
+            <div className="text-[14px] text-white/70">{t("income")}</div>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <span className="text-[17px] font-semibold tabular-nums">
+                {hidden ? "•••" : formatBalance(income, locale, BASE_CURRENCY)}
+              </span>
+              <TrendingUp className="w-4 h-4 text-[#86EFAC] shrink-0" />
+            </div>
+          </div>
+          <div className="rounded-2xl bg-black/20 backdrop-blur-sm px-4 py-3.5">
+            <div className="text-[14px] text-white/70">{t("expense")}</div>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <span className="text-[17px] font-semibold tabular-nums">
+                {hidden ? "•••" : formatBalance(expense, locale, BASE_CURRENCY)}
+              </span>
+              <TrendingDown className="w-4 h-4 text-[#FCA5A5] shrink-0" />
+            </div>
           </div>
         </div>
-        <div className="pl-1">
-          <div className="text-[12px] text-white/65">{t("expense")}</div>
-          <div className="mt-1 flex items-center gap-1.5">
-            <span className="text-[15px] font-semibold">
-              {hidden ? "•••" : formatBalance(displayExpense, locale, currency)}
-            </span>
-            <TrendingDown className="w-3.5 h-3.5 text-[#FCA5A5]" />
-          </div>
+
+        <div className="relative z-10 mt-4 w-full flex items-center justify-between gap-3 rounded-2xl bg-card text-[#1e2a78] dark:text-white px-4 py-3.5 font-semibold text-[15px]">
+          <span>{t("tapCurrencies")}</span>
+          <span className="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
+            <ChevronRight className="w-5 h-5 dark:text-primary" strokeWidth={2.4} />
+          </span>
         </div>
       </div>
     </div>
