@@ -12,14 +12,13 @@ import { format, parseISO } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import {
   useCallback,
-  useRef,
   useState,
   type ReactNode,
   type UIEvent,
 } from "react";
 import { currencySymbol } from "@/lib/currency";
 import { formatBalance, formatMoney, formatRate } from "@/lib/format";
-import { shareOrDownloadPdf } from "@/lib/shareReceiptPdf";
+import { shareTransactionBanner } from "@/lib/shareTransactionBanner";
 import type { TxItem } from "@/lib/types";
 
 export function TransactionSheet({
@@ -43,6 +42,7 @@ export function TransactionSheet({
   const currency = tx.currency || "KGS";
   const isIncome = amount >= 0;
   const typeLabel = isIncome ? t("income") : t("expense");
+  const amountLabel = formatMoney(amount, locale, currency);
 
   const dateTime = formatDateTime(tx.date, tx.createdAt);
   const receiptId = formatReceiptId(tx.id);
@@ -55,7 +55,6 @@ export function TransactionSheet({
     .filter(Boolean)
     .join("\n");
 
-  const receiptRef = useRef<HTMLDivElement>(null);
   const [collapse, setCollapse] = useState(0);
   const [sharing, setSharing] = useState(false);
 
@@ -65,13 +64,31 @@ export function TransactionSheet({
   }, []);
 
   async function share() {
-    if (!receiptRef.current || sharing) return;
+    if (sharing) return;
     setSharing(true);
     try {
-      await shareOrDownloadPdf({
-        element: receiptRef.current,
-        fileName: `receipt-${receiptId}.pdf`,
+      const text = [
+        amountLabel,
+        typeLabel,
+        `${t("dateTime")}: ${dateTime}`,
+        `${t("receiptId")}: ${receiptId}`,
+        `${t("paidFrom")}: ${currency} · ${currencySymbol(currency)}`,
+        `${t("recipient")}: ${tx.personName || t("none")}`,
+        `${t("total")}: ${formatBalance(Math.abs(amount), locale, currency)}`,
+        purpose ? `${t("purpose")}:\n${purpose}` : "",
+        currency !== "KGS"
+          ? `${tCurr("rate")}: ${formatRate(tx.exchangeRate || 1, currency)}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      await shareTransactionBanner({
+        amount: amountLabel,
+        typeLabel,
+        text,
         title: t("details"),
+        fileName: `receipt-${receiptId}.png`,
       });
     } catch {
       /* ignore */
@@ -87,60 +104,10 @@ export function TransactionSheet({
 
   return (
     <div className="fixed inset-0 z-[100] bg-[#0B0B0B]">
-      {/* Offscreen receipt for PDF — mirrors on-screen design */}
-      <div
-        ref={receiptRef}
-        aria-hidden
-        className="pointer-events-none fixed top-0 left-0 w-[390px] -z-50 opacity-[0.02] overflow-hidden bg-[#0B0B0B] text-foreground"
-      >
-        <div className="px-6 pt-10 pb-8 flex flex-col items-center text-center">
-          <div className="w-[64px] h-[64px] rounded-full bg-[#22C55E] flex items-center justify-center">
-            <Check className="w-8 h-8 text-white" strokeWidth={3} />
-          </div>
-          <div className="mt-5 text-[34px] font-bold tracking-[-0.04em] tabular-nums text-white leading-none">
-            {formatMoney(amount, locale, currency)}
-          </div>
-          <div className="mt-3 text-[16px] text-white/85 font-semibold">
-            {typeLabel}
-          </div>
-        </div>
-        <div className="bg-background rounded-t-[28px] px-5 pt-5 pb-8">
-          <h3 className="font-bold text-[20px] tracking-[-0.02em] mb-4">
-            {t("details")}
-          </h3>
-          <div className="bg-card rounded-[22px] px-4 divide-y divide-line">
-            <ReceiptRow label={t("dateTime")} value={dateTime} />
-            <ReceiptRow label={t("receiptId")} value={receiptId} mono />
-            <ReceiptRow
-              label={t("paidFrom")}
-              value={`${currency} · ${currencySymbol(currency)}`}
-            />
-            <ReceiptRow
-              label={t("recipient")}
-              value={tx.personName || t("none")}
-            />
-            <ReceiptRow
-              label={t("total")}
-              value={formatBalance(Math.abs(amount), locale, currency)}
-              valueClass={isIncome ? "text-[#16A34A]" : undefined}
-            />
-            <ReceiptRow label={t("purpose")} value={purpose} multiline />
-            {currency !== "KGS" && (
-              <ReceiptRow
-                label={tCurr("rate")}
-                value={formatRate(tx.exchangeRate || 1, currency)}
-              />
-            )}
-            <ReceiptRow label={t("type")} value={typeLabel} />
-          </div>
-        </div>
-      </div>
-
       <div
         className="h-full overflow-y-auto overscroll-contain"
         onScroll={onScroll}
       >
-        {/* Top bar: back + collapsing mini check */}
         <div className="sticky top-0 z-30 flex items-center justify-between px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1 bg-gradient-to-b from-[#0B0B0B] via-[#0B0B0B] to-transparent">
           <button
             type="button"
@@ -160,7 +127,6 @@ export function TransactionSheet({
           <div className="w-10 h-10" aria-hidden />
         </div>
 
-        {/* Success header */}
         <div
           className="relative px-5 overflow-hidden"
           style={{
@@ -199,7 +165,7 @@ export function TransactionSheet({
               />
             </div>
             <div className="mt-4 text-[36px] font-bold tracking-[-0.04em] tabular-nums text-white leading-none">
-              {formatMoney(amount, locale, currency)}
+              {amountLabel}
             </div>
             <div className="mt-2.5 text-[16px] text-white/85 font-semibold">
               {typeLabel}
@@ -207,7 +173,6 @@ export function TransactionSheet({
           </div>
         </div>
 
-        {/* Details sheet — grows to fill screen when scrolled */}
         <div className="relative min-h-[calc(100dvh-52px)] flex flex-col bg-background rounded-t-[28px] shadow-[0_-12px_40px_rgba(0,0,0,0.35)]">
           <div className="mx-auto w-10 h-1 rounded-full bg-[#D1D5DB] mt-3 shrink-0" />
 
@@ -344,41 +309,6 @@ function Row({
       <span
         className={`flex-1 text-[16px] font-semibold text-right break-words ${
           mono ? "font-mono text-[14px] tracking-tight" : ""
-        } ${multiline ? "whitespace-pre-line leading-snug" : ""} ${
-          valueClass || "text-foreground"
-        }`}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function ReceiptRow({
-  label,
-  value,
-  mono,
-  multiline,
-  valueClass,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-  multiline?: boolean;
-  valueClass?: string;
-}) {
-  return (
-    <div
-      className={`flex gap-4 py-3.5 ${
-        multiline ? "items-start" : "items-center"
-      }`}
-    >
-      <span className="text-[14px] text-muted shrink-0 max-w-[42%]">
-        {label}
-      </span>
-      <span
-        className={`flex-1 text-[15px] font-semibold text-right break-words ${
-          mono ? "font-mono text-[13px]" : ""
         } ${multiline ? "whitespace-pre-line leading-snug" : ""} ${
           valueClass || "text-foreground"
         }`}
