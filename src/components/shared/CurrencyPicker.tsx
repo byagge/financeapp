@@ -145,7 +145,8 @@ export function CurrencyPicker({
                   onChange={(e) => setQ(e.target.value)}
                   placeholder={t("search")}
                   className="w-full rounded-full bg-background pl-9 pr-4 py-2.5 text-[14px] outline-none"
-                  autoFocus
+                  inputMode="search"
+                  enterKeyHint="search"
                 />
               </div>
               {!q && pinned.length > 0 && (
