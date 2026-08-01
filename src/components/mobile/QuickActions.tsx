@@ -9,19 +9,19 @@ const actions = [
     href: "/transactions/new?type=income",
     icon: ArrowDownLeft,
     key: "income" as const,
-    color: "bg-[#ECFDF5] text-[#16A34A]",
+    color: "bg-success-soft text-success-strong",
   },
   {
     href: "/transactions/new?type=expense",
     icon: ArrowUpRight,
     key: "expense" as const,
-    color: "bg-[#FEF2F2] text-[#DC2626]",
+    color: "bg-danger-soft text-danger-strong",
   },
   {
     href: "/people",
     icon: Users,
     key: "people" as const,
-    color: "bg-primary-soft text-[#4A3AFF]",
+    color: "bg-primary-soft text-primary",
   },
 ];
 

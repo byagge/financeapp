@@ -26,7 +26,9 @@ export function Avatar({
         height: size,
         background: color || "#A8B5AE",
         fontSize: size * 0.3,
-        boxShadow: selected ? "0 0 0 2px #D8EAE6, 0 0 0 3.5px #0B0B0B" : undefined,
+        boxShadow: selected
+          ? "0 0 0 2px color-mix(in srgb, var(--primary) 35%, transparent), 0 0 0 3.5px var(--ink)"
+          : undefined,
       }}
       aria-label={name}
     >

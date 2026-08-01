@@ -174,7 +174,7 @@ export function TransactionSheet({
         </div>
 
         <div className="relative min-h-[calc(100dvh-52px)] flex flex-col bg-background rounded-t-[28px] shadow-[0_-12px_40px_rgba(0,0,0,0.35)]">
-          <div className="mx-auto w-10 h-1 rounded-full bg-[#D1D5DB] mt-3 shrink-0" />
+          <div className="mx-auto w-10 h-1 rounded-full bg-line-strong mt-3 shrink-0" />
 
           <div className="flex items-center justify-between px-5 pt-3 pb-2 shrink-0">
             <h3 className="font-bold text-[20px] tracking-[-0.02em]">

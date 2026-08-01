@@ -342,7 +342,7 @@ export function HistoryPage() {
             }}
             className={`w-11 h-11 rounded-xl border flex items-center justify-center transition-colors ${
               showSearch
-                ? "border-[#4A3AFF] bg-primary-soft text-[#4A3AFF]"
+                ? "border-primary bg-primary-soft text-primary"
                 : "border-line-strong bg-card text-muted-strong"
             }`}
             aria-label={t("search")}
@@ -383,7 +383,7 @@ export function HistoryPage() {
               onClick={() => setTypeFilter(f.id)}
               className={`shrink-0 rounded-full px-4 py-2.5 text-[14px] font-semibold transition-colors ${
                 type === f.id
-                  ? "bg-[#111827] text-white"
+                  ? "bg-foreground text-background"
                   : "bg-card text-muted-strong border border-line-strong"
               }`}
             >
@@ -395,7 +395,7 @@ export function HistoryPage() {
         {hasActiveFilters && (personId || from || to) && (
           <div className="mt-3 flex items-center gap-2 flex-wrap">
             {filterPersonName && (
-              <span className="inline-flex items-center rounded-full bg-primary-soft text-[#4A3AFF] px-3 py-1.5 text-[13px] font-semibold">
+              <span className="inline-flex items-center rounded-full bg-primary-soft text-primary px-3 py-1.5 text-[13px] font-semibold">
                 {filterPersonName}
               </span>
             )}

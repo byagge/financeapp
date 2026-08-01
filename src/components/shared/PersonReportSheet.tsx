@@ -88,7 +88,7 @@ export function PersonReportSheet({
                 onClick={() => setPeriod(p)}
                 className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${
                   active
-                    ? "bg-[#4A3AFF] text-white"
+                    ? "bg-primary text-white"
                     : "bg-background text-muted-strong"
                 }`}
               >
@@ -112,7 +112,7 @@ export function PersonReportSheet({
               {formatBalance(report.total, locale)}
             </div>
 
-            <div className="bg-[#F8F9FC] rounded-[20px] p-4 space-y-3">
+            <div className="bg-surface rounded-[20px] p-4 space-y-3">
               <FlowBar
                 label={t("income")}
                 value={report.income}
@@ -156,7 +156,7 @@ export function PersonReportSheet({
 
             <section className="space-y-2">
               <h4 className="font-semibold text-[14px]">{t("byDates")}</h4>
-              <div className="bg-[#F8F9FC] rounded-[20px] divide-y divide-line overflow-hidden">
+              <div className="bg-surface rounded-[20px] divide-y divide-line overflow-hidden">
                 {report.byDate.map((d) => (
                   <div key={d.date} className="px-3.5 py-3 space-y-2">
                     <div className="flex items-center justify-between gap-3">
@@ -352,7 +352,7 @@ function Stat({
   tone?: string;
 }) {
   return (
-    <div className="bg-[#F8F9FC] rounded-[16px] px-3.5 py-3">
+    <div className="bg-surface rounded-[16px] px-3.5 py-3">
       <div className="text-[10px] text-muted font-medium mb-1">{label}</div>
       <div className={`text-[14px] font-bold tabular-nums truncate ${tone}`}>{value}</div>
     </div>
@@ -372,14 +372,14 @@ function TopList({
 
   if (items.length === 0) {
     return (
-      <div className="bg-[#F8F9FC] rounded-[20px] py-6 text-center text-muted text-sm">
+      <div className="bg-surface rounded-[20px] py-6 text-center text-muted text-sm">
         {t("empty")}
       </div>
     );
   }
 
   return (
-    <div className="bg-[#F8F9FC] rounded-[20px] divide-y divide-line overflow-hidden">
+    <div className="bg-surface rounded-[20px] divide-y divide-line overflow-hidden">
       {items.map((item, i) => (
         <div key={item.id} className="flex items-center gap-3 px-3.5 py-3">
           <div className="w-6 h-6 rounded-full bg-card text-muted-strong text-[11px] font-bold flex items-center justify-center shrink-0">

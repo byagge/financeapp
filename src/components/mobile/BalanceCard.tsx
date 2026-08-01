@@ -111,10 +111,10 @@ export function BalanceCard({
           </div>
         </div>
 
-        <div className="relative z-10 mt-4 w-full flex items-center justify-between gap-3 rounded-2xl bg-card text-[#1e2a78] dark:text-white px-4 py-3.5 font-semibold text-[15px]">
+        <div className="relative z-10 mt-4 w-full flex items-center justify-between gap-3 rounded-2xl bg-card text-primary px-4 py-3.5 font-semibold text-[15px]">
           <span>{t("tapCurrencies")}</span>
-          <span className="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
-            <ChevronRight className="w-5 h-5 dark:text-primary" strokeWidth={2.4} />
+          <span className="w-8 h-8 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0">
+            <ChevronRight className="w-5 h-5" strokeWidth={2.4} />
           </span>
         </div>
       </div>

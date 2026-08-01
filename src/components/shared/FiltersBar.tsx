@@ -42,7 +42,7 @@ export function FiltersBar({
           value={value.q}
           onChange={(e) => set({ q: e.target.value })}
           placeholder={t("search")}
-          className="w-full bg-background rounded-2xl pl-10 pr-10 py-3 text-sm outline-none focus:ring-2 focus:ring-[#4A3AFF]/20"
+          className="w-full bg-background rounded-2xl pl-10 pr-10 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
         />
         {value.q && (
           <button

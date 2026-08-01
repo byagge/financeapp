@@ -49,7 +49,7 @@ export function BottomNav() {
 
         <Link
           href="/transactions/new"
-          className="absolute left-1/2 -translate-x-1/2 top-0 w-[60px] h-[60px] -mt-5 rounded-full bg-[#4A3AFF] text-white flex items-center justify-center shadow-[0_12px_28px_rgba(74,58,255,0.45)]"
+          className="absolute left-1/2 -translate-x-1/2 top-0 w-[60px] h-[60px] -mt-5 rounded-full bg-primary text-white flex items-center justify-center shadow-[0_12px_28px_rgba(74,58,255,0.45)]"
           aria-label={t("add")}
         >
           <Plus className="w-8 h-8" strokeWidth={2.4} />

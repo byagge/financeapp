@@ -130,7 +130,7 @@ export function TransactionForm({
           <h3 className="font-semibold text-[15px]">{t("person")}</h3>
           <Link
             href="/people"
-            className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#4A3AFF]"
+            className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary"
           >
             <Plus className="w-3.5 h-3.5" />
             {tPeople("add")}
@@ -247,7 +247,7 @@ export function TransactionForm({
       </div>
 
       <label className="bg-card rounded-[20px] px-4 py-3 flex items-center gap-3 shadow-card">
-        <CalendarDays className="w-5 h-5 text-[#4A3AFF] shrink-0" />
+        <CalendarDays className="w-5 h-5 text-primary shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="text-[11px] text-muted">{t("date")}</div>
           <input
@@ -272,7 +272,7 @@ export function TransactionForm({
       <button
         type="submit"
         disabled={mutation.isPending}
-        className="w-full bg-[#4A3AFF] text-white rounded-full py-[15px] font-semibold disabled:opacity-60 shadow-[0_12px_28px_rgba(74,58,255,0.35)]"
+        className="w-full bg-primary text-white rounded-full py-[15px] font-semibold disabled:opacity-60 shadow-[0_12px_28px_rgba(74,58,255,0.35)]"
       >
         {mutation.isPending ? "…" : id ? t("save") : t("continue")}
       </button>

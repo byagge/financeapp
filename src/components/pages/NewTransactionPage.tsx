@@ -267,14 +267,14 @@ export function NewTransactionPage({
   const accent =
     type === "income"
       ? {
-          amount: "text-[#15803D]",
+          amount: "text-success-strong",
           btn: "bg-[#16A34A] shadow-[0_10px_24px_rgba(22,163,74,0.3)]",
           arrow: "bg-[#16A34A]",
         }
       : {
-          amount: "text-[#B91C1C]",
-          btn: "bg-[#4A3AFF] shadow-[0_10px_24px_rgba(74,58,255,0.35)]",
-          arrow: "bg-[#4A3AFF]",
+          amount: "text-danger-strong",
+          btn: "bg-primary shadow-[0_10px_24px_rgba(74,58,255,0.35)]",
+          arrow: "bg-primary",
         };
 
   const amountNum = Number(amount) || 0;
@@ -325,9 +325,9 @@ export function NewTransactionPage({
               onClick={() => setType(tab)}
               className={`flex-1 rounded-full py-3.5 text-[17px] font-bold transition-colors ${
                 active && tab === "income"
-                  ? "bg-[#22C55E]/20 text-[#15803D]"
+                  ? "bg-success-soft text-[#15803D] dark:text-[#86EFAC]"
                   : active && tab === "expense"
-                    ? "bg-[#EF4444]/20 text-[#B91C1C]"
+                    ? "bg-danger-soft text-[#B91C1C] dark:text-[#FCA5A5]"
                     : "text-muted-strong"
               }`}
             >
@@ -414,7 +414,7 @@ export function NewTransactionPage({
         className="relative w-full bg-card rounded-[22px] px-4 py-3.5 flex items-center gap-3.5 shadow-card text-left active:bg-surface"
       >
         <span className="w-12 h-12 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
-          <CalendarDays className="w-5 h-5 text-[#4A3AFF]" />
+          <CalendarDays className="w-5 h-5 text-primary" />
         </span>
         <div className="flex-1 min-w-0">
           <div className="text-[13px] text-muted font-medium">{t("date")}</div>
@@ -527,7 +527,7 @@ export function NewTransactionPage({
             onClick={() => applyNoteSuggestion(hint)}
             className={`shrink-0 rounded-full px-3.5 py-2 text-[13px] font-semibold border transition-colors ${
               note === hint
-                ? "bg-primary-soft border-[#4A3AFF] text-[#4A3AFF]"
+                ? "bg-primary-soft border-primary text-primary"
                 : "bg-card border-line-strong text-muted-strong"
             }`}
           >
@@ -565,7 +565,7 @@ export function NewTransactionPage({
                 <div className="font-bold text-[16px]">{t("selectPerson")}</div>
                 <Link
                   href="/people"
-                  className="text-[13px] font-semibold text-[#4A3AFF]"
+                  className="text-[13px] font-semibold text-primary"
                   onClick={() => setPersonOpen(false)}
                 >
                   + {tPeople("add")}
@@ -589,7 +589,7 @@ export function NewTransactionPage({
                 <div className="flex-1 min-w-0 font-semibold text-[15px]">
                   {t("none")}
                 </div>
-                {!personId && <Check className="w-4 h-4 text-[#4A3AFF]" />}
+                {!personId && <Check className="w-4 h-4 text-primary" />}
               </button>
 
               {peopleLoading ? (
@@ -624,7 +624,7 @@ export function NewTransactionPage({
                           {formatBalance(p.total, locale)}
                         </div>
                       </div>
-                      {active && <Check className="w-4 h-4 text-[#4A3AFF]" />}
+                      {active && <Check className="w-4 h-4 text-primary" />}
                     </button>
                   );
                 })

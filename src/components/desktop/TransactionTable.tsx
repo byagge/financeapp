@@ -82,7 +82,7 @@ export function TransactionTable({
                       {onDelete && (
                         <button
                           type="button"
-                          className="p-2 rounded-xl hover:bg-[#FEF2F2]/20 dark:hover:bg-[#7f1d1d]/30 text-rose-600"
+                          className="p-2 rounded-xl hover:bg-danger-soft text-rose-600"
                           onClick={() => {
                             if (confirm(tCommon("confirmDelete"))) onDelete(tx.id);
                           }}

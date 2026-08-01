@@ -3,7 +3,7 @@ import { Sidebar } from "@/components/desktop/Sidebar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh flex bg-background">
+    <div className="min-h-dvh flex bg-background text-foreground">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <AppChrome>{children}</AppChrome>

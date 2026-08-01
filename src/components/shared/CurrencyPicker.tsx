@@ -159,7 +159,7 @@ export function CurrencyPicker({
                         onClick={() => pick(c.code)}
                         className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold border ${
                           active
-                            ? "bg-primary-soft border-[#4A3AFF] text-[#4A3AFF]"
+                            ? "bg-primary-soft border-primary text-primary"
                             : "bg-card border-line-strong text-muted-strong"
                         }`}
                       >
@@ -200,7 +200,7 @@ export function CurrencyPicker({
                           {c.symbol ? ` · ${c.symbol}` : ""}
                         </div>
                       </div>
-                      {active && <Check className="w-4 h-4 text-[#4A3AFF]" />}
+                      {active && <Check className="w-4 h-4 text-primary" />}
                     </button>
                   </div>
                 );

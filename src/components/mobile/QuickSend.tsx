@@ -33,7 +33,7 @@ export function QuickSend() {
         <p className="text-[14px] text-muted mb-3 px-0.5">{tHome("peopleHint")}</p>
         <Link
           href="/people"
-          className="block bg-card rounded-[22px] px-4 py-6 text-center text-[15px] font-medium text-[#4A3AFF] shadow-card"
+          className="block bg-card rounded-[22px] px-4 py-6 text-center text-[15px] font-medium text-primary shadow-card"
         >
           {t("add")}
         </Link>
@@ -47,7 +47,7 @@ export function QuickSend() {
         <h2 className="font-semibold text-[18px] tracking-[-0.02em]">
           {t("quickSend")}
         </h2>
-        <Link href="/people" className="text-[15px] text-[#4A3AFF] font-semibold pb-0.5">
+        <Link href="/people" className="text-[15px] text-primary font-semibold pb-0.5">
           {tHome("viewAll")} ›
         </Link>
       </div>

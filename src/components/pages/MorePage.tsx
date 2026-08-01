@@ -114,7 +114,7 @@ export function MorePage() {
             href="/admin"
             className="flex items-center gap-3.5 px-4 py-4 active:bg-surface"
           >
-            <span className="w-11 h-11 rounded-full bg-[#4A3AFF] text-white flex items-center justify-center shrink-0">
+            <span className="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
               <Shield className="w-5 h-5" />
             </span>
             <span className="flex-1 font-semibold text-[16px]">{tNav("admin")}</span>
@@ -126,9 +126,9 @@ export function MorePage() {
       <button
         type="button"
         onClick={() => setConfirmLogout(true)}
-        className="w-full flex items-center gap-3.5 bg-card rounded-[22px] px-4 py-4 shadow-card active:bg-[#FEF2F2]/15 dark:active:bg-[#7f1d1d]/30 text-left"
+        className="w-full flex items-center gap-3.5 bg-card rounded-[22px] px-4 py-4 shadow-card active:bg-danger-soft text-left"
       >
-        <span className="w-11 h-11 rounded-full bg-[#FEF2F2] dark:bg-[#7f1d1d]/40 text-[#EF4444] flex items-center justify-center shrink-0">
+        <span className="w-11 h-11 rounded-full bg-danger-soft text-[#EF4444] flex items-center justify-center shrink-0">
           <LogOut className="w-5 h-5" />
         </span>
         <span className="flex-1 font-semibold text-[16px] text-[#EF4444]">

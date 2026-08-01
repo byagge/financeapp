@@ -84,7 +84,7 @@ export function AdminPage() {
       <div className="flex items-center justify-between gap-3 pt-1">
         <div>
           <h1 className="text-[22px] font-bold tracking-[-0.02em] flex items-center gap-2">
-            <Shield className="w-5 h-5 text-[#4A3AFF]" />
+            <Shield className="w-5 h-5 text-primary" />
             {t("title")}
           </h1>
           <p className="text-[13px] text-muted mt-1">{t("subtitle")}</p>
@@ -92,7 +92,7 @@ export function AdminPage() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-1.5 bg-[#4A3AFF] text-white rounded-full px-4 py-2 text-sm font-semibold shrink-0"
+          className="inline-flex items-center gap-1.5 bg-primary text-white rounded-full px-4 py-2 text-sm font-semibold shrink-0"
         >
           <Plus className="w-4 h-4" />
           {t("create")}
@@ -148,7 +148,7 @@ export function AdminPage() {
             <button
               type="submit"
               disabled={create.isPending}
-              className="rounded-xl px-4 py-3 font-semibold text-white bg-[#4A3AFF] disabled:opacity-60"
+              className="rounded-xl px-4 py-3 font-semibold text-white bg-primary disabled:opacity-60"
             >
               {create.isPending ? "…" : t("save")}
             </button>
@@ -173,7 +173,7 @@ export function AdminPage() {
               <span
                 className={`text-[11px] font-semibold rounded-full px-2.5 py-1 shrink-0 ${
                   u.role === "admin"
-                    ? "bg-primary-soft text-[#4A3AFF]"
+                    ? "bg-primary-soft text-primary"
                     : "bg-background text-muted-strong"
                 }`}
               >
@@ -182,7 +182,7 @@ export function AdminPage() {
               {u.id !== session.user.id && (
                 <button
                   type="button"
-                  className="p-2 rounded-xl hover:bg-[#FEF2F2]/20 dark:hover:bg-[#7f1d1d]/30 text-[#EF4444] shrink-0"
+                  className="p-2 rounded-xl hover:bg-danger-soft text-[#EF4444] shrink-0"
                   onClick={() => {
                     if (confirm(t("confirmDelete"))) remove.mutate(u.id);
                   }}

@@ -153,7 +153,7 @@ export function BalancesPage() {
         <button
           type="button"
           onClick={() => setAddOpen(true)}
-          className="w-full flex items-center justify-center gap-2 rounded-[22px] border-2 border-dashed border-[#D1D5DB] bg-card py-4 text-[16px] font-semibold text-[#4A3AFF] active:bg-background"
+          className="w-full flex items-center justify-center gap-2 rounded-[22px] border-2 border-dashed border-[#D1D5DB] bg-card py-4 text-[16px] font-semibold text-primary active:bg-background"
         >
           <Plus className="w-5 h-5" strokeWidth={2.4} />
           {t("addTitle")}
@@ -223,7 +223,7 @@ function CurrencyRow({
       type="button"
       onClick={onSelect}
       className={`w-full text-left bg-card rounded-[24px] px-4 py-4 shadow-card transition-shadow ${
-        selected ? "ring-2 ring-[#4A3AFF] ring-offset-2 ring-offset-background" : ""
+        selected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
       }`}
     >
       <div className="flex items-center gap-3.5">
@@ -256,21 +256,21 @@ function CurrencyRow({
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-[#F0FDF4] px-3.5 py-3.5">
-          <div className="text-[14px] font-medium text-[#15803D]">
+        <div className="rounded-2xl bg-success-soft px-3.5 py-3.5">
+          <div className="text-[14px] font-medium text-success-strong">
             {incomeLabel}
           </div>
-          <div className="mt-1.5 text-[18px] font-bold tabular-nums text-[#16A34A] leading-snug">
+          <div className="mt-1.5 text-[18px] font-bold tabular-nums text-success-strong leading-snug">
             {hidden
               ? "•••"
               : formatBalance(balance.income, locale, balance.currency)}
           </div>
         </div>
-        <div className="rounded-2xl bg-[#FEF2F2] px-3.5 py-3.5">
-          <div className="text-[14px] font-medium text-[#B91C1C]">
+        <div className="rounded-2xl bg-danger-soft px-3.5 py-3.5">
+          <div className="text-[14px] font-medium text-danger-strong">
             {expenseLabel}
           </div>
-          <div className="mt-1.5 text-[18px] font-bold tabular-nums text-[#EF4444] leading-snug">
+          <div className="mt-1.5 text-[18px] font-bold tabular-nums text-danger-strong leading-snug">
             {hidden
               ? "•••"
               : formatBalance(balance.expense, locale, balance.currency)}

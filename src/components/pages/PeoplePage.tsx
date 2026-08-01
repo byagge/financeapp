@@ -48,7 +48,7 @@ export function PeoplePage() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-1.5 bg-[#4A3AFF] text-white rounded-full px-4 py-2 text-sm font-semibold shrink-0"
+          className="inline-flex items-center gap-1.5 bg-primary text-white rounded-full px-4 py-2 text-sm font-semibold shrink-0"
         >
           <Plus className="w-4 h-4" />
           {t("add")}
@@ -83,7 +83,7 @@ export function PeoplePage() {
             </button>
             <button
               type="submit"
-              className="rounded-xl px-4 py-3 font-semibold text-white bg-[#4A3AFF]"
+              className="rounded-xl px-4 py-3 font-semibold text-white bg-primary"
             >
               {t("save")}
             </button>
@@ -124,7 +124,7 @@ export function PeoplePage() {
               </button>
               <button
                 type="button"
-                className="p-2 rounded-xl hover:bg-[#FEF2F2]/20 dark:hover:bg-[#7f1d1d]/30 text-[#EF4444] shrink-0"
+                className="p-2 rounded-xl hover:bg-danger-soft text-[#EF4444] shrink-0"
                 onClick={() => {
                   if (confirm(tCommon("confirmDelete"))) remove.mutate(p.id);
                 }}

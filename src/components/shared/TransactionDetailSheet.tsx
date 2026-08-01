@@ -71,7 +71,7 @@ export function TransactionDetailSheet({
           {formatMoney(amount, locale, currency)}
         </div>
 
-        <div className="space-y-3 bg-[#F8F9FC] rounded-[20px] p-4 text-[14px]">
+        <div className="space-y-3 bg-surface rounded-[20px] p-4 text-[14px]">
           <Row label={t("type")} value={amount >= 0 ? t("income") : t("expense")} />
           <Row label={t("date")} value={tx.date} />
           <Row label={t("person")} value={tx.personName || t("none")} />
@@ -106,7 +106,7 @@ export function TransactionDetailSheet({
           </Link>
           <button
             type="button"
-            className="flex items-center justify-center gap-2 rounded-full bg-[#FEF2F2] text-[#DC2626] py-3.5 font-semibold text-[14px]"
+            className="flex items-center justify-center gap-2 rounded-full bg-danger-soft text-[#DC2626] py-3.5 font-semibold text-[14px]"
             onClick={() => {
               if (confirm(tCommon("confirmDelete"))) del.mutate();
             }}

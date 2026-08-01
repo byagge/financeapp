@@ -28,7 +28,7 @@ export function TransactionList({
           <h2 className="font-semibold text-[18px] tracking-[-0.02em]">
             {title || t("transactions")}
           </h2>
-          <Link href="/history" className="text-[15px] text-[#4A3AFF] font-semibold">
+          <Link href="/history" className="text-[15px] text-primary font-semibold">
             {t("viewAll")} ›
           </Link>
         </div>

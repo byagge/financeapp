@@ -32,9 +32,15 @@ function resolve(preference: ThemePreference): "light" | "dark" {
   return preference;
 }
 
-function applyDom(resolved: "light" | "dark") {
+/** Keep class + data-theme + color-scheme in sync so light never inherits dark tokens. */
+export function applyDomTheme(resolved: "light" | "dark") {
   const root = document.documentElement;
-  root.classList.toggle("dark", resolved === "dark");
+  root.dataset.theme = resolved;
+  if (resolved === "dark") {
+    root.classList.add("dark");
+  } else {
+    root.classList.remove("dark");
+  }
   root.style.colorScheme = resolved;
 }
 
@@ -54,7 +60,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const next = resolve(stored);
     setPreferenceState(stored);
     setResolved(next);
-    applyDom(next);
+    applyDomTheme(next);
     setReady(true);
   }, []);
 
@@ -64,7 +70,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const onChange = () => {
       const next = resolve("system");
       setResolved(next);
-      applyDom(next);
+      applyDomTheme(next);
     };
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
@@ -79,7 +85,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
     const next = resolve(value);
     setResolved(next);
-    applyDom(next);
+    applyDomTheme(next);
   }, []);
 
   const value = useMemo(
@@ -98,5 +104,5 @@ export function useTheme() {
   return ctx;
 }
 
-/** Inline script — put in <head> to avoid FOUC. */
-export const themeInitScript = `(function(){try{var t=localStorage.getItem('${STORAGE_KEY}')||'system';var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;if(d)r.classList.add('dark');r.style.colorScheme=d?'dark':'light';}catch(e){}})();`;
+/** Inline script — put in <head> to avoid FOUC. Always sets data-theme + .dark. */
+export const themeInitScript = `(function(){try{var k='${STORAGE_KEY}';var t=localStorage.getItem(k)||'system';var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;var mode=d?'dark':'light';r.dataset.theme=mode;if(d)r.classList.add('dark');else r.classList.remove('dark');r.style.colorScheme=mode;}catch(e){var r=document.documentElement;r.dataset.theme='light';r.classList.remove('dark');r.style.colorScheme='light';}})();`;

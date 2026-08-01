@@ -131,10 +131,10 @@ export function PeriodSheet({
                 onClick={() => pickQuick(item)}
                 className={`w-full flex items-center justify-between px-4 py-4 text-left text-[17px] font-semibold min-h-[56px] ${
                   i > 0 ? "border-t border-line" : ""
-                } ${active ? "text-[#4A3AFF] bg-primary-soft/70" : "text-foreground"}`}
+                } ${active ? "text-primary bg-primary-soft/70" : "text-foreground"}`}
               >
                 <span>{item.label}</span>
-                {active && <Check className="w-5 h-5 text-[#4A3AFF]" strokeWidth={2.4} />}
+                {active && <Check className="w-5 h-5 text-primary" strokeWidth={2.4} />}
               </button>
             );
           })}
@@ -143,7 +143,7 @@ export function PeriodSheet({
         <button
           type="button"
           onClick={apply}
-          className="w-full rounded-2xl bg-[#1F2937] text-white py-4 font-semibold text-[17px] min-h-[56px]"
+          className="w-full rounded-2xl bg-foreground text-background py-4 font-semibold text-[17px] min-h-[56px]"
         >
           {t("show")}
         </button>

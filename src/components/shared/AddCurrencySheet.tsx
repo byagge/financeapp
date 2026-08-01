@@ -237,7 +237,7 @@ export function AddCurrencySheet({
                   type="button"
                   disabled={add.isPending}
                   onClick={() => add.mutate(selected.code)}
-                  className="w-full rounded-2xl bg-[#4A3AFF] text-white py-4 font-semibold text-[17px] min-h-[56px] disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="w-full rounded-2xl bg-primary text-white py-4 font-semibold text-[17px] min-h-[56px] disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   <Check className="w-5 h-5" strokeWidth={2.4} />
                   {add.isPending ? tCommon("loading") : t("confirmAction")}

@@ -44,7 +44,7 @@ export function CurrencyFlag({
   if (!src || failed) {
     return (
       <div
-        className={`rounded-full bg-primary-soft text-[#4A3AFF] flex items-center justify-center font-bold shrink-0 ${className}`}
+        className={`rounded-full bg-primary-soft text-primary flex items-center justify-center font-bold shrink-0 ${className}`}
         style={{ width: size, height: size, fontSize: size * 0.28 }}
         aria-hidden
       >
