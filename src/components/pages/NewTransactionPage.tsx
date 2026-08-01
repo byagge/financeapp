@@ -281,7 +281,7 @@ export function NewTransactionPage({
 
   return (
     <div className="flex flex-col max-w-xl mx-auto pb-6 gap-3">
-      {isEdit && (
+      {isEdit ? (
         <header className="flex items-center justify-between pt-1 -mt-1">
           <Link
             href="/history"
@@ -300,6 +300,17 @@ export function NewTransactionPage({
             }}
           >
             <Trash2 className="w-5 h-5" />
+          </button>
+        </header>
+      ) : (
+        <header className="flex items-center pt-1 -mt-1 -ml-1">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="w-10 h-10 flex items-center justify-center text-[#16A34A]"
+            aria-label={tCommon("back")}
+          >
+            <ChevronLeft className="w-7 h-7" strokeWidth={2} />
           </button>
         </header>
       )}
