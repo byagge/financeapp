@@ -21,6 +21,7 @@ import {
 import { TransactionSheet } from "@/components/shared/TransactionSheet";
 import { useAnalytics, usePeople, useTransactions } from "@/hooks/useFinance";
 import { formatMoney } from "@/lib/format";
+import { fuzzyFilterRanked } from "@/lib/fuzzySearch";
 import { getPeriodRange } from "@/lib/period";
 import { fetchJson, type TxItem } from "@/lib/types";
 import { buildRepeatQuery } from "@/lib/repeatTransaction";
@@ -139,9 +140,9 @@ export function HistoryPage() {
       personId: personId || undefined,
       from: from || undefined,
       to: to || undefined,
-      q: isSearching ? q.trim() : undefined,
+      // Text is fuzzy-filtered client-side (typos / translit / aliases).
     }),
-    [type, personId, from, to, q, isSearching]
+    [type, personId, from, to]
   );
 
   const { data, isLoading } = useTransactions(params);
@@ -182,7 +183,21 @@ export function HistoryPage() {
     },
   });
 
-  const items = data?.items || [];
+  const items = useMemo(() => {
+    const all = data?.items || [];
+    if (!isSearching) return all;
+    const term = q.trim();
+    return fuzzyFilterRanked(all, term, (tx) => [
+      tx.name,
+      tx.note,
+      tx.personName,
+      tx.categoryName,
+      tx.currency,
+      tx.date,
+      tx.income ? String(tx.income) : "",
+      tx.expense ? String(tx.expense) : "",
+    ]);
+  }, [data?.items, isSearching, q]);
 
   const monthSummary = monthAnalytics?.summary || { income: 0, expense: 0 };
   const monthSegments = useMemo(

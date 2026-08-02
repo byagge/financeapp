@@ -1,4 +1,5 @@
 import * as cc from "currency-codes";
+import { fuzzyMatchAny } from "@/lib/fuzzySearch";
 import { currencyFlagCountry, currencyFlagUrl } from "./currencyFlags";
 
 export { currencyFlagCountry, currencyFlagUrl };
@@ -50,18 +51,18 @@ const SHORT_NAMES: Record<string, { ru: string; uz: string; en: string }> = {
 
 /** Extra aliases so Cyrillic search works even if Intl differs. */
 const SEARCH_ALIASES: Record<string, string[]> = {
-  KGS: ["сом", "кыргызский", "киргизский", "qirgiz", "қирғиз"],
-  USD: ["доллар", "доллор", "бакс", "dollar", "aqsh", "ақш"],
-  EUR: ["евро", "yevro", "еуро"],
-  RUB: ["рубль", "рубл", "rubl"],
-  UZS: ["сум", "so'm", "сўм", "so‘m"],
-  GBP: ["фунт", "funt"],
-  CNY: ["юань", "yuan", "юан"],
-  KZT: ["тенге", "tenge"],
-  TRY: ["лира", "lira"],
-  AED: ["дирхам", "dirham"],
-  CHF: ["франк", "frank"],
-  JPY: ["иена", "йена", "yen"],
+  KGS: ["сом", "соьм", "кыргызский", "киргизский", "qirgiz", "қирғиз", "som", "kgs"],
+  USD: ["доллар", "доллор", "долар", "бакс", "dollar", "dolar", "bucks", "aqsh", "ақш", "usd"],
+  EUR: ["евро", "yevro", "еуро", "euro", "eur"],
+  RUB: ["рубль", "рубл", "рубли", "rubl", "ruble", "rouble", "rub"],
+  UZS: ["сум", "so'm", "сўм", "so‘m", "sum", "som", "uzs"],
+  GBP: ["фунт", "funt", "pound", "gbp"],
+  CNY: ["юань", "yuan", "юан", "cny", "rmb"],
+  KZT: ["тенге", "tenge", "kzt"],
+  TRY: ["лира", "lira", "try"],
+  AED: ["дирхам", "dirham", "aed"],
+  CHF: ["франк", "frank", "franc", "chf"],
+  JPY: ["иена", "йена", "yen", "jpy"],
 };
 
 export type CurrencyInfo = {
@@ -163,8 +164,8 @@ export function listCurrencies(locale = "ru"): CurrencyInfo[] {
   });
 }
 
-function matchesQuery(c: CurrencyInfo, q: string) {
-  const hay = [
+function currencyMatchScore(c: CurrencyInfo, q: string): number {
+  return fuzzyMatchAny(q, [
     c.code,
     c.name,
     c.nameEn,
@@ -172,17 +173,22 @@ function matchesQuery(c: CurrencyInfo, q: string) {
     c.nameUz,
     c.symbol,
     ...(SEARCH_ALIASES[c.code] || []),
-  ]
-    .join(" ")
-    .toLowerCase();
-  return hay.includes(q);
+  ]);
 }
 
 export function searchCurrencies(query: string, locale = "ru"): CurrencyInfo[] {
-  const q = query.trim().toLowerCase();
+  const q = query.trim();
   const all = listCurrencies(locale);
   if (!q) return all;
-  return all.filter((c) => matchesQuery(c, q));
+  return all
+    .map((c) => ({ c, score: currencyMatchScore(c, q) }))
+    .filter((x) => x.score >= 0)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (a.c.primary !== b.c.primary) return a.c.primary ? -1 : 1;
+      return a.c.code.localeCompare(b.c.code);
+    })
+    .map((x) => x.c);
 }
 
 export function isValidCurrency(code: string) {
