@@ -99,9 +99,9 @@ select,
 button,
 textarea {
   font: inherit;
-  color: inherit;
 }
 
+/* Don't force color:inherit on buttons — it fights inverted chip styles */
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 textarea,
 select {
@@ -215,3 +215,10 @@ textarea::placeholder {
 .shadow-card {
   box-shadow: var(--shadow-card);
 }
+
+/** Active period/filter chips — always contrast with bg-foreground fill */
+.chip-active {
+  background-color: var(--ink);
+  color: var(--bg);
+}
+

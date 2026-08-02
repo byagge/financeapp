@@ -24,7 +24,7 @@ export function PeriodPills({
   const pill = (active: boolean) =>
     `shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-3 text-[15px] font-semibold transition-colors min-h-[48px] ${
       active
-        ? "bg-foreground text-background"
+        ? "chip-active"
         : "bg-card text-muted-strong border border-line-strong"
     }`;
 

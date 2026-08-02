@@ -143,7 +143,7 @@ export function PeriodSheet({
         <button
           type="button"
           onClick={apply}
-          className="w-full rounded-2xl bg-foreground text-background py-4 font-semibold text-[17px] min-h-[56px]"
+          className="w-full rounded-2xl chip-active py-4 font-semibold text-[17px] min-h-[56px]"
         >
           {t("show")}
         </button>
