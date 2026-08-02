@@ -204,7 +204,7 @@ export function AddCurrencySheet({
         ) : (
           selected && (
             <div className="px-5 py-6 flex flex-col flex-1">
-              <div className="rounded-[24px] bg-gradient-to-br from-[#1e2a78] via-[#3d4fd6] to-[#7b5cff] text-white px-5 py-6 shadow-[0_16px_36px_rgba(30,42,120,0.22)]">
+              <div className="rounded-[24px] bg-gradient-to-br from-[#14532d] via-[#16a34a] to-[#4ade80] text-white px-5 py-6 shadow-[0_16px_36px_rgba(22,163,74,0.28)]">
                 <div className="flex items-center gap-3">
                   <CurrencyFlag code={selected.code} size={52} />
                   <div className="min-w-0">

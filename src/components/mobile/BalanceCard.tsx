@@ -40,11 +40,11 @@ export function BalanceCard({
     <div className="relative pr-3">
       <div
         aria-hidden
-        className="absolute top-3 bottom-3 right-0 w-10 rounded-[24px] bg-gradient-to-br from-[#312e81] to-[#6366f1] opacity-55 shadow-[0_12px_28px_rgba(46,58,180,0.18)]"
+        className="absolute top-3 bottom-3 right-0 w-10 rounded-[24px] bg-gradient-to-br from-[#166534] to-[#4ade80] opacity-55 shadow-[0_12px_28px_rgba(22,163,74,0.18)]"
       />
       <div
         aria-hidden
-        className="absolute top-1.5 bottom-1.5 right-1 w-7 rounded-[24px] bg-gradient-to-br from-[#1e3a5f] to-[#3b82f6] opacity-80"
+        className="absolute top-1.5 bottom-1.5 right-1 w-7 rounded-[24px] bg-gradient-to-br from-[#14532d] to-[#22c55e] opacity-80"
       />
 
       <div
@@ -57,7 +57,7 @@ export function BalanceCard({
             openBalances();
           }
         }}
-        className="balance-gradient relative z-10 mr-2.5 rounded-[28px] px-5 pt-5 pb-5 text-white shadow-[0_18px_40px_rgba(46,58,180,0.28)] active:scale-[0.985] transition-transform cursor-pointer"
+        className="balance-gradient relative z-10 mr-2.5 rounded-[28px] px-5 pt-5 pb-5 text-white shadow-[0_18px_40px_rgba(22,163,74,0.28)] active:scale-[0.985] transition-transform cursor-pointer"
         aria-label={t("tapCurrencies")}
       >
         <div className="relative z-10 flex items-center justify-between gap-2">

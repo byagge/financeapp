@@ -10,8 +10,8 @@
   --ink: #111827;
   --muted: #9ca3af;
   --muted-strong: #6b7280;
-  --primary: #4a3aff;
-  --primary-soft: #eeecff;
+  --primary: #16a34a;
+  --primary-soft: #ecfdf5;
   --success: #22c55e;
   --success-strong: #16a34a;
   --success-soft: #ecfdf5;
@@ -35,8 +35,8 @@ html[data-theme="dark"] {
   --ink: #f3f4f6;
   --muted: #a1a1aa;
   --muted-strong: #d4d4d8;
-  --primary: #7c6bff;
-  --primary-soft: #2a2750;
+  --primary: #4ade80;
+  --primary-soft: rgba(34, 197, 94, 0.16);
   --success: #22c55e;
   --success-strong: #22c55e;
   --success-soft: rgba(34, 197, 94, 0.16);
@@ -127,7 +127,7 @@ textarea::placeholder {
 }
 
 .balance-gradient {
-  background: linear-gradient(135deg, #1e2a78 0%, #3d4fd6 42%, #7b5cff 100%);
+  background: linear-gradient(135deg, #14532d 0%, #16a34a 42%, #4ade80 100%);
   position: relative;
   overflow: visible;
 }
@@ -139,7 +139,7 @@ textarea::placeholder {
   border-radius: inherit;
   background:
     linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.08) 40%, rgba(255, 255, 255, 0.08) 55%, transparent 55%),
-    linear-gradient(160deg, transparent 50%, rgba(123, 92, 255, 0.35) 50%);
+    linear-gradient(160deg, transparent 50%, rgba(74, 222, 128, 0.35) 50%);
   pointer-events: none;
   z-index: 0;
 }

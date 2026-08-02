@@ -305,13 +305,13 @@ export function NewTransactionPage({
     type === "income"
       ? {
           amount: "text-success-strong",
-          btn: "bg-[#16A34A] shadow-[0_10px_24px_rgba(22,163,74,0.3)]",
-          arrow: "bg-[#16A34A]",
+          btn: "bg-primary shadow-[0_10px_24px_rgba(22,163,74,0.35)]",
+          arrow: "bg-primary",
         }
       : {
           amount: "text-danger-strong",
-          btn: "bg-primary shadow-[0_10px_24px_rgba(74,58,255,0.35)]",
-          arrow: "bg-primary",
+          btn: "bg-[#EF4444] shadow-[0_10px_24px_rgba(239,68,68,0.35)]",
+          arrow: "bg-[#EF4444]",
         };
 
   const amountNum = Number(amount) || 0;

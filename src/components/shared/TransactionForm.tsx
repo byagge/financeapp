@@ -272,7 +272,7 @@ export function TransactionForm({
       <button
         type="submit"
         disabled={mutation.isPending}
-        className="w-full bg-primary text-white rounded-full py-[15px] font-semibold disabled:opacity-60 shadow-[0_12px_28px_rgba(74,58,255,0.35)]"
+        className="w-full bg-primary text-white rounded-full py-[15px] font-semibold disabled:opacity-60 shadow-[0_12px_28px_rgba(22,163,74,0.35)]"
       >
         {mutation.isPending ? "…" : id ? t("save") : t("continue")}
       </button>

@@ -49,7 +49,7 @@ export function BottomNav() {
 
         <Link
           href="/transactions/new"
-          className="absolute left-1/2 -translate-x-1/2 top-0 w-[60px] h-[60px] -mt-5 rounded-full bg-primary text-white flex items-center justify-center shadow-[0_12px_28px_rgba(74,58,255,0.45)]"
+          className="absolute left-1/2 -translate-x-1/2 top-0 w-[60px] h-[60px] -mt-5 rounded-full bg-primary text-white flex items-center justify-center shadow-[0_12px_28px_rgba(22,163,74,0.45)]"
           aria-label={t("add")}
         >
           <Plus className="w-8 h-8" strokeWidth={2.4} />
@@ -73,7 +73,7 @@ export function BottomNav() {
                 "relative flex-1 flex flex-col items-center gap-1.5 pb-1 text-[12px] font-semibold",
                 active
                   ? green
-                    ? "text-[#16A34A]"
+                    ? "text-primary"
                     : "text-foreground"
                   : "text-muted"
               )}
@@ -84,7 +84,7 @@ export function BottomNav() {
                 <span
                   className={cn(
                     "absolute bottom-0 w-5 h-0.5 rounded-full",
-                    green ? "bg-[#16A34A]" : "bg-foreground"
+                    green ? "bg-primary" : "bg-foreground"
                   )}
                 />
               )}
