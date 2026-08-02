@@ -32,12 +32,12 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "relative flex-1 flex flex-col items-center gap-1.5 pb-1 text-[12px] font-semibold",
+                "relative flex-1 flex flex-col items-center gap-1 pb-1 text-[11px] font-semibold leading-tight min-w-0",
                 active ? "text-foreground" : "text-muted"
               )}
             >
-              <Icon className="w-6 h-6" strokeWidth={active ? 2.3 : 1.8} />
-              <span>{t(item.key)}</span>
+              <Icon className="w-6 h-6 shrink-0" strokeWidth={active ? 2.3 : 1.8} />
+              <span className="truncate max-w-full px-0.5 text-center">{t(item.key)}</span>
               {active && (
                 <span className="absolute bottom-0 w-5 h-0.5 rounded-full bg-foreground" />
               )}
@@ -70,7 +70,7 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "relative flex-1 flex flex-col items-center gap-1.5 pb-1 text-[12px] font-semibold",
+                "relative flex-1 flex flex-col items-center gap-1 pb-1 text-[11px] font-semibold leading-tight min-w-0",
                 active
                   ? green
                     ? "text-primary"
@@ -78,8 +78,8 @@ export function BottomNav() {
                   : "text-muted"
               )}
             >
-              <Icon className="w-6 h-6" strokeWidth={active ? 2.3 : 1.8} />
-              <span>{t(item.key)}</span>
+              <Icon className="w-6 h-6 shrink-0" strokeWidth={active ? 2.3 : 1.8} />
+              <span className="truncate max-w-full px-0.5 text-center">{t(item.key)}</span>
               {active && (
                 <span
                   className={cn(

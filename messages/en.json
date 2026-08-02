@@ -5,9 +5,9 @@
   },
   "nav": {
     "home": "Home",
-    "history": "Transactions",
+    "history": "History",
     "add": "Add",
-    "analytics": "Analytics",
+    "analytics": "Stats",
     "people": "People",
     "profile": "Profile",
     "more": "More",
@@ -30,7 +30,7 @@
     "greetingNight": "Good night",
     "homeSubtitle": "Your total balance and quick actions",
     "balance": "Total balance",
-    "balanceHint": "All currencies converted to som",
+    "balanceHint": "All your money shown in som",
     "periodDay": "Day",
     "periodWeek": "Week",
     "periodMonth": "Month",
@@ -47,7 +47,7 @@
     "people": "People",
     "peopleHint": "Tap a person to add a transaction",
     "currencySom": "Som",
-    "tapCurrencies": "View by currency",
+    "tapCurrencies": "Tap to view by currency",
     "settings": "Settings"
   },
   "period": {

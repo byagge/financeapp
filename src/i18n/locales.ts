@@ -20,8 +20,8 @@ export const localeFlagCountry: Record<AppLocale, string> = {
 /** Native language names — always shown in their own language. */
 export const localeNativeName: Record<AppLocale, string> = {
   ru: "Русский",
-  uz: "Ўзбек (кириллица)",
-  "uz-Latn": "Oʻzbek (lotin)",
+  uz: "Ўзбекча",
+  "uz-Latn": "Oʻzbekcha",
   ky: "Кыргызча",
   en: "English",
 };

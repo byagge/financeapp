@@ -5,9 +5,9 @@
   },
   "nav": {
     "home": "Башкы",
-    "history": "Операциялар",
+    "history": "Тарых",
     "add": "Кошуу",
-    "analytics": "Аналитика",
+    "analytics": "Талдоо",
     "people": "Адамдар",
     "profile": "Профиль",
     "more": "Дагы",
@@ -30,7 +30,7 @@
     "greetingNight": "Кутман түн",
     "homeSubtitle": "Жалпы балансыңыз жана тез аракеттер",
     "balance": "Жалпы баланс",
-    "balanceHint": "Бардык валюталар сомго которулган",
+    "balanceHint": "Бардык акчаңыз сом менен көрсөтүлгөн",
     "periodDay": "Күн",
     "periodWeek": "Апта",
     "periodMonth": "Ай",
@@ -47,7 +47,7 @@
     "people": "Адамдар",
     "peopleHint": "Операция кошуу үчүн адамды басыңыз",
     "currencySom": "Сом",
-    "tapCurrencies": "Валюта боюнча көрүү",
+    "tapCurrencies": "Басыңыз — валюта боюнча көрүү",
     "settings": "Жөндөөлөр"
   },
   "period": {

@@ -5,10 +5,10 @@
   },
   "nav": {
     "home": "Главная",
-    "history": "Операции",
+    "history": "История",
     "add": "Добавить",
-    "analytics": "Аналитика",
-    "people": "Личности",
+    "analytics": "Отчёты",
+    "people": "Люди",
     "profile": "Профиль",
     "more": "Ещё",
     "admin": "Админ"
@@ -30,7 +30,7 @@
     "greetingNight": "Доброй ночи",
     "homeSubtitle": "Здесь ваш общий баланс и быстрые действия",
     "balance": "Общий баланс",
-    "balanceHint": "Все валюты переведены в сомы",
+    "balanceHint": "Сумма всех ваших денег в сомах",
     "periodDay": "День",
     "periodWeek": "Неделя",
     "periodMonth": "Месяц",
@@ -47,7 +47,7 @@
     "people": "Личности",
     "peopleHint": "Нажмите на человека, чтобы добавить операцию",
     "currencySom": "Сом",
-    "tapCurrencies": "Смотреть по валютам",
+    "tapCurrencies": "Нажмите — посмотреть по валютам",
     "settings": "Настройки"
   },
   "period": {

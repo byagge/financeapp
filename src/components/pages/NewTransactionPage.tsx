@@ -28,6 +28,7 @@ import {
   useUserCurrencies,
 } from "@/hooks/useFinance";
 import { useRateToKgs } from "@/hooks/useExchangeRates";
+import { useKeyboardInset } from "@/hooks/useKeyboardInset";
 import { groupBalancesByCurrency } from "@/lib/balances";
 import { BASE_CURRENCY, currencySymbol } from "@/lib/currency";
 import { formatBalance, formatRateValue, roundRate } from "@/lib/format";
@@ -144,6 +145,7 @@ export function NewTransactionPage({
   const { data: txData } = useTransactions({});
   const people = peopleData?.items || [];
   const { rate: liveRate, isLoading: rateLoading } = useRateToKgs(currency);
+  const keyboardInset = useKeyboardInset(personOpen);
 
   const noteSuggestions = useMemo(
     () => [
@@ -586,7 +588,13 @@ export function NewTransactionPage({
             aria-label={tCommon("close")}
             onClick={closePersonSheet}
           />
-          <div className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-xl rounded-t-[24px] bg-card shadow-2xl max-h-[75dvh] flex flex-col animate-sheet">
+          <div
+            className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-xl rounded-t-[24px] bg-card shadow-2xl flex flex-col animate-sheet pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+            style={{
+              bottom: keyboardInset,
+              maxHeight: `min(75dvh, calc(100dvh - ${keyboardInset}px - 12px))`,
+            }}
+          >
             <div className="px-4 pt-3 pb-2 border-b border-line">
               <div className="mx-auto w-10 h-1 rounded-full bg-line-strong mb-3" />
               <div className="font-bold text-[16px] mb-3">{t("selectPerson")}</div>
