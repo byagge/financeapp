@@ -83,9 +83,18 @@ export function TransactionSheet({
         .filter(Boolean)
         .join("\n");
 
+      const rateLabel =
+        currency !== "KGS"
+          ? formatRate(tx.exchangeRate || 1, currency)
+          : null;
+
       await shareTransactionBanner({
         amount: amountLabel,
         typeLabel,
+        dateLabel: dateTime,
+        rateLabel,
+        dateMetaLabel: t("date"),
+        rateMetaLabel: tCurr("rateShort"),
         text,
         title: t("details"),
         fileName: `receipt-${receiptId}.png`,

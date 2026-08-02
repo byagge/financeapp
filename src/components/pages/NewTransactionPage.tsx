@@ -2,11 +2,14 @@
 
 import {
   ArrowDown,
+  ArrowRight,
   CalendarDays,
   Check,
   ChevronLeft,
   ChevronRight,
+  Search,
   Trash2,
+  UserPlus,
   UserRound,
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -127,6 +130,7 @@ export function NewTransactionPage({
   const [date, setDate] = useState(seedDate);
   const [personId, setPersonId] = useState(seedPerson);
   const [personOpen, setPersonOpen] = useState(false);
+  const [personQuery, setPersonQuery] = useState("");
   const [currency, setCurrency] = useState<string>(seedCurrency);
   const [exchangeRate, setExchangeRate] = useState(seedRate || 1);
   const [rateText, setRateText] = useState(
@@ -180,6 +184,39 @@ export function NewTransactionPage({
     () => people.find((p) => p.id === personId),
     [people, personId]
   );
+
+  const personQueryTrim = personQuery.trim();
+  const filteredPeople = useMemo(() => {
+    if (!personQueryTrim) return people;
+    const q = personQueryTrim.toLowerCase();
+    return people.filter((p) => p.name.toLowerCase().includes(q));
+  }, [people, personQueryTrim]);
+
+  const canCreatePerson =
+    personQueryTrim.length > 0 &&
+    filteredPeople.length === 0 &&
+    !people.some(
+      (p) => p.name.toLowerCase() === personQueryTrim.toLowerCase()
+    );
+
+  const createPerson = useMutation({
+    mutationFn: (name: string) =>
+      fetchJson<{ id: string }>("/api/people", {
+        method: "POST",
+        body: JSON.stringify({ name }),
+      }),
+    onSuccess: async (person) => {
+      await qc.invalidateQueries({ queryKey: ["people"] });
+      setPersonId(person.id);
+      setPersonQuery("");
+      setPersonOpen(false);
+    },
+  });
+
+  function closePersonSheet() {
+    setPersonOpen(false);
+    setPersonQuery("");
+  }
 
   const dateLabel = useMemo(() => {
     try {
@@ -356,18 +393,14 @@ export function NewTransactionPage({
               <CurrencyFlag code={selected.code} size={48} />
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-[17px] truncate">
-                  {selected.name}
+                  {tCurrency("label")}: {selected.name}
                 </div>
                 <div className="text-[13px] text-muted font-medium truncate mt-0.5">
                   {selected.code} ·{" "}
                   {formatBalance(currencyBalance, locale, selected.code)}
                 </div>
               </div>
-              <div className="shrink-0 w-12 h-8 rounded-lg bg-background border border-line flex items-center justify-center overflow-hidden">
-                <span className="text-[13px] font-bold text-muted-strong">
-                  {currencySymbol(selected.code)}
-                </span>
-              </div>
+              <ArrowRight className="w-5 h-5 text-muted shrink-0" />
             </button>
           )}
         </CurrencyPicker>
@@ -411,18 +444,13 @@ export function NewTransactionPage({
       <button
         type="button"
         onClick={openDatePicker}
-        className="relative w-full bg-card rounded-[22px] px-4 py-3.5 flex items-center gap-3.5 shadow-card text-left active:bg-surface"
+        className="relative w-full px-2 py-1.5 flex items-center gap-2 text-left rounded-xl active:bg-surface/70"
       >
-        <span className="w-12 h-12 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
-          <CalendarDays className="w-5 h-5 text-primary" />
+        <CalendarDays className="w-4 h-4 text-muted shrink-0" />
+        <span className="flex-1 min-w-0 text-[13px] text-muted-strong capitalize truncate">
+          {dateLabel}
         </span>
-        <div className="flex-1 min-w-0">
-          <div className="text-[13px] text-muted font-medium">{t("date")}</div>
-          <div className="font-semibold text-[17px] mt-0.5 capitalize truncate">
-            {dateLabel}
-          </div>
-        </div>
-        <ChevronRight className="w-5 h-5 text-muted shrink-0" />
+        <ChevronRight className="w-4 h-4 text-muted/70 shrink-0" />
         <input
           ref={dateInputRef}
           type="date"
@@ -556,52 +584,81 @@ export function NewTransactionPage({
             type="button"
             className="fixed inset-0 z-[100] bg-black/30"
             aria-label={tCommon("close")}
-            onClick={() => setPersonOpen(false)}
+            onClick={closePersonSheet}
           />
           <div className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-xl rounded-t-[24px] bg-card shadow-2xl max-h-[75dvh] flex flex-col animate-sheet">
             <div className="px-4 pt-3 pb-2 border-b border-line">
               <div className="mx-auto w-10 h-1 rounded-full bg-line-strong mb-3" />
-              <div className="flex items-center justify-between gap-3 mb-1">
-                <div className="font-bold text-[16px]">{t("selectPerson")}</div>
-                <Link
-                  href="/people"
-                  className="text-[13px] font-semibold text-primary"
-                  onClick={() => setPersonOpen(false)}
-                >
-                  + {tPeople("add")}
-                </Link>
+              <div className="font-bold text-[16px] mb-3">{t("selectPerson")}</div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                <input
+                  value={personQuery}
+                  onChange={(e) => setPersonQuery(e.target.value)}
+                  placeholder={tPeople("search")}
+                  className="w-full rounded-full bg-background pl-9 pr-4 py-2.5 text-[14px] outline-none"
+                  inputMode="search"
+                  enterKeyHint="search"
+                  autoFocus
+                />
               </div>
             </div>
             <div className="overflow-y-auto flex-1 px-2 py-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setPersonId("");
-                  setPersonOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left ${
-                  !personId ? "bg-primary-soft" : "active:bg-background"
-                }`}
-              >
-                <span className="w-11 h-11 rounded-full bg-surface flex items-center justify-center shrink-0">
-                  <UserRound className="w-5 h-5 text-muted" />
-                </span>
-                <div className="flex-1 min-w-0 font-semibold text-[15px]">
-                  {t("none")}
-                </div>
-                {!personId && <Check className="w-4 h-4 text-primary" />}
-              </button>
+              {!personQueryTrim && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPersonId("");
+                    closePersonSheet();
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left ${
+                    !personId ? "bg-primary-soft" : "active:bg-background"
+                  }`}
+                >
+                  <span className="w-11 h-11 rounded-full bg-surface flex items-center justify-center shrink-0">
+                    <UserRound className="w-5 h-5 text-muted" />
+                  </span>
+                  <div className="flex-1 min-w-0 font-semibold text-[15px]">
+                    {t("none")}
+                  </div>
+                  {!personId && <Check className="w-4 h-4 text-primary" />}
+                </button>
+              )}
 
               {peopleLoading ? (
                 <div className="text-center text-sm text-muted py-10">
                   {tCommon("loading")}
                 </div>
-              ) : people.length === 0 ? (
+              ) : canCreatePerson ? (
+                <div className="px-2 py-4 space-y-4">
+                  <div className="text-center text-[15px] text-foreground font-medium px-2">
+                    {tPeople("createConfirm", { name: personQueryTrim })}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 px-1">
+                    <button
+                      type="button"
+                      onClick={() => setPersonQuery("")}
+                      className="rounded-xl px-4 py-3 font-semibold text-muted-strong bg-background"
+                    >
+                      {tCommon("cancel")}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={createPerson.isPending}
+                      onClick={() => createPerson.mutate(personQueryTrim)}
+                      className="rounded-xl px-4 py-3 font-semibold text-white bg-primary disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      {createPerson.isPending ? "…" : tPeople("create")}
+                    </button>
+                  </div>
+                </div>
+              ) : filteredPeople.length === 0 ? (
                 <div className="text-center text-sm text-muted py-10">
                   {tPeople("empty")}
                 </div>
               ) : (
-                people.map((p) => {
+                filteredPeople.map((p) => {
                   const active = personId === p.id;
                   return (
                     <button
@@ -609,7 +666,7 @@ export function NewTransactionPage({
                       type="button"
                       onClick={() => {
                         setPersonId(p.id);
-                        setPersonOpen(false);
+                        closePersonSheet();
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left ${
                         active ? "bg-primary-soft" : "active:bg-background"

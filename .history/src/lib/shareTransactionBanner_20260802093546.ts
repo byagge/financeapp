@@ -1,4 +1,4 @@
-/** Draw a share banner (check + amount + type + date/rate) and share as PNG + text. */
+/** Draw a simple share banner (check + amount + type) and share as PNG + text. */
 
 function drawCheck(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
   ctx.beginPath();
@@ -17,51 +17,9 @@ function drawCheck(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: num
   ctx.stroke();
 }
 
-function drawRoundedRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number
-) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
-
-function drawMetaRow(
-  ctx: CanvasRenderingContext2D,
-  label: string,
-  value: string,
-  y: number,
-  canvasW: number
-) {
-  const padX = 136;
-
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "rgba(255,255,255,0.42)";
-  ctx.font = "500 28px system-ui, -apple-system, Segoe UI, sans-serif";
-  ctx.fillText(label, padX, y);
-
-  ctx.textAlign = "right";
-  ctx.fillStyle = "rgba(255,255,255,0.94)";
-  ctx.font = "600 30px system-ui, -apple-system, Segoe UI, sans-serif";
-  ctx.fillText(value, canvasW - padX, y, canvasW - padX * 2 - 160);
-}
-
 function drawBanner(opts: {
   amount: string;
   typeLabel: string;
-  dateLabel: string;
-  rateLabel?: string | null;
-  dateMetaLabel: string;
-  rateMetaLabel: string;
 }): HTMLCanvasElement {
   const w = 1080;
   const h = 1080;
@@ -71,6 +29,7 @@ function drawBanner(opts: {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas");
 
+  // Background
   const grad = ctx.createLinearGradient(0, 0, w, h);
   grad.addColorStop(0, "#0B0B0B");
   grad.addColorStop(0.55, "#12141A");
@@ -92,45 +51,17 @@ function drawBanner(opts: {
     ctx.fill();
   }
 
-  drawCheck(ctx, w / 2, 300, 100);
+  drawCheck(ctx, w / 2, 340, 110);
 
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "700 88px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.font = "700 92px system-ui, -apple-system, Segoe UI, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(opts.amount, w / 2, 500, w - 120);
+  ctx.fillText(opts.amount, w / 2, 560, w - 120);
 
   ctx.fillStyle = "rgba(255,255,255,0.85)";
-  ctx.font = "600 44px system-ui, -apple-system, Segoe UI, sans-serif";
-  ctx.fillText(opts.typeLabel, w / 2, 590, w - 120);
-
-  // Meta card: date (+ rate when foreign currency)
-  const hasRate = Boolean(opts.rateLabel);
-  const cardX = 88;
-  const cardY = 700;
-  const cardW = w - cardX * 2;
-  const cardH = hasRate ? 200 : 128;
-
-  drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 36);
-  ctx.fillStyle = "rgba(255,255,255,0.06)";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.1)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  const dateY = hasRate ? cardY + 58 : cardY + cardH / 2;
-  drawMetaRow(ctx, opts.dateMetaLabel, opts.dateLabel, dateY, w);
-
-  if (hasRate && opts.rateLabel) {
-    ctx.beginPath();
-    ctx.strokeStyle = "rgba(255,255,255,0.1)";
-    ctx.lineWidth = 1.5;
-    ctx.moveTo(cardX + 48, cardY + cardH / 2);
-    ctx.lineTo(cardX + cardW - 48, cardY + cardH / 2);
-    ctx.stroke();
-
-    drawMetaRow(ctx, opts.rateMetaLabel, opts.rateLabel, cardY + 142, w);
-  }
+  ctx.font = "600 48px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText(opts.typeLabel, w / 2, 660, w - 120);
 
   return canvas;
 }
@@ -159,10 +90,6 @@ function downloadBlob(blob: Blob, fileName: string) {
 export async function shareTransactionBanner(opts: {
   amount: string;
   typeLabel: string;
-  dateLabel: string;
-  rateLabel?: string | null;
-  dateMetaLabel?: string;
-  rateMetaLabel?: string;
   text: string;
   title: string;
   fileName?: string;
@@ -170,10 +97,6 @@ export async function shareTransactionBanner(opts: {
   const canvas = drawBanner({
     amount: opts.amount,
     typeLabel: opts.typeLabel,
-    dateLabel: opts.dateLabel,
-    rateLabel: opts.rateLabel,
-    dateMetaLabel: opts.dateMetaLabel || "Дата",
-    rateMetaLabel: opts.rateMetaLabel || "Курс",
   });
   const blob = await canvasToPngBlob(canvas);
   const fileName = opts.fileName || "transaction.png";
