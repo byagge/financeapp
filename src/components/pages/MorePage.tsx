@@ -66,7 +66,7 @@ export function MorePage() {
         href="/profile"
         className="flex items-center gap-3.5 bg-card rounded-[22px] px-4 py-4 shadow-card active:bg-surface"
       >
-        <span className="w-12 h-12 rounded-full bg-surface text-muted flex items-center justify-center shrink-0">
+        <span className="w-12 h-12 rounded-full bg-primary/15 backdrop-blur-sm text-primary flex items-center justify-center shrink-0">
           <UserRound className="w-6 h-6" />
         </span>
         <div className="flex-1 min-w-0">
@@ -104,7 +104,7 @@ export function MorePage() {
           href="/people"
           className="flex items-center gap-3.5 px-4 py-4 active:bg-surface"
         >
-          <span className="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
+          <span className="w-11 h-11 rounded-full bg-primary/15 backdrop-blur-sm text-primary flex items-center justify-center shrink-0">
             <Users className="w-5 h-5" />
           </span>
           <span className="flex-1 font-semibold text-[16px]">
@@ -129,7 +129,7 @@ export function MorePage() {
             href="/admin"
             className="flex items-center gap-3.5 px-4 py-4 active:bg-surface"
           >
-            <span className="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
+            <span className="w-11 h-11 rounded-full bg-primary/15 backdrop-blur-sm text-primary flex items-center justify-center shrink-0">
               <Shield className="w-5 h-5" />
             </span>
             <span className="flex-1 font-semibold text-[16px]">{tNav("admin")}</span>
