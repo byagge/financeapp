@@ -216,7 +216,10 @@
     "theme": "Theme",
     "themeSystem": "System",
     "themeLight": "Light",
-    "themeDark": "Dark"
+    "themeDark": "Dark",
+    "city": "Weather city",
+    "cityAuto": "Auto (by IP)",
+    "cityHint": "Pick your city — IP can show the wrong place"
   },
   "admin": {
     "title": "Admin panel",

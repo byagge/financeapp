@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -17,6 +18,12 @@ import {
 } from "@/i18n/locales";
 import { Link, useRouter } from "@/i18n/routing";
 import { useHideBalance } from "@/hooks/useHideBalance";
+import { useWeatherCity } from "@/hooks/useWeather";
+import {
+  WEATHER_CITIES,
+  cityLabel,
+  type WeatherCityId,
+} from "@/lib/weatherCities";
 
 export function SettingsPage() {
   const t = useTranslations("settings");
@@ -27,9 +34,12 @@ export function SettingsPage() {
   const { update } = useSession();
   const { hidden, setHidden } = useHideBalance();
   const { preference, setPreference } = useTheme();
+  const { cityId, setCityId } = useWeatherCity();
+  const qc = useQueryClient();
 
   const [langOpen, setLangOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
   const [passOpen, setPassOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -90,11 +100,25 @@ export function SettingsPage() {
 
   const langLabel = localeNativeName[locale];
 
+  const cityDisplay =
+    cityId === "auto"
+      ? t("cityAuto")
+      : cityLabel(
+          WEATHER_CITIES.find((c) => c.id === cityId) || WEATHER_CITIES[0],
+          locale
+        );
+
   const themeOptions: { id: ThemePreference; label: string }[] = [
     { id: "system", label: t("themeSystem") },
     { id: "light", label: t("themeLight") },
     { id: "dark", label: t("themeDark") },
   ];
+
+  function pickCity(next: WeatherCityId) {
+    setCityId(next);
+    setCityOpen(false);
+    qc.invalidateQueries({ queryKey: ["weather"] });
+  }
 
   return (
     <div className="space-y-5 pb-6 max-w-lg">
@@ -131,6 +155,22 @@ export function SettingsPage() {
           >
             <span className="flex-1 font-medium text-[15px]">{t("theme")}</span>
             <span className="text-[14px] text-muted">{themeLabel}</span>
+            <ChevronRight className="w-4 h-4 text-muted shrink-0" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setCityOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-4 text-left active:bg-surface"
+          >
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-[15px]">{t("city")}</div>
+              <div className="text-[12px] text-muted mt-0.5">
+                {t("cityHint")}
+              </div>
+            </div>
+            <span className="text-[14px] text-muted shrink-0 max-w-[40%] truncate">
+              {cityDisplay}
+            </span>
             <ChevronRight className="w-4 h-4 text-muted shrink-0" />
           </button>
         </div>
@@ -236,6 +276,52 @@ export function SettingsPage() {
                     }`}
                   >
                     {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
+      {cityOpen && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-[100] bg-black/40"
+            aria-label={tCommon("close")}
+            onClick={() => setCityOpen(false)}
+          />
+          <div className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-xl rounded-t-[24px] bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl animate-sheet">
+            <div className="mx-auto w-10 h-1 rounded-full bg-line-strong mb-4" />
+            <div className="font-bold text-[18px] mb-1">{t("city")}</div>
+            <p className="text-[13px] text-muted-strong mb-4">{t("cityHint")}</p>
+            <div className="space-y-2 max-h-[55dvh] overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => pickCity("auto")}
+                className={`w-full rounded-2xl py-3.5 px-4 font-semibold border text-left ${
+                  cityId === "auto"
+                    ? "bg-[#16A34A] text-white border-[#16A34A]"
+                    : "bg-background border-transparent text-foreground"
+                }`}
+              >
+                {t("cityAuto")}
+              </button>
+              {WEATHER_CITIES.map((c) => {
+                const active = cityId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => pickCity(c.id)}
+                    className={`w-full rounded-2xl py-3.5 px-4 font-semibold border text-left ${
+                      active
+                        ? "bg-[#16A34A] text-white border-[#16A34A]"
+                        : "bg-background border-transparent text-foreground"
+                    }`}
+                  >
+                    {cityLabel(c, locale)}
                   </button>
                 );
               })}

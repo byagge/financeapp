@@ -32,6 +32,7 @@ import { useKeyboardInset } from "@/hooks/useKeyboardInset";
 import { groupBalancesByCurrency } from "@/lib/balances";
 import { BASE_CURRENCY, currencySymbol } from "@/lib/currency";
 import { formatBalance, formatRateValue, roundRate } from "@/lib/format";
+import { personMatchScore } from "@/lib/personSearch";
 import { fetchJson } from "@/lib/types";
 import { todayISO } from "@/lib/utils";
 
@@ -132,6 +133,7 @@ export function NewTransactionPage({
   const [personId, setPersonId] = useState(seedPerson);
   const [personOpen, setPersonOpen] = useState(false);
   const [personQuery, setPersonQuery] = useState("");
+  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [currency, setCurrency] = useState<string>(seedCurrency);
   const [exchangeRate, setExchangeRate] = useState(seedRate || 1);
   const [rateText, setRateText] = useState(
@@ -188,18 +190,23 @@ export function NewTransactionPage({
   );
 
   const personQueryTrim = personQuery.trim();
-  const filteredPeople = useMemo(() => {
-    if (!personQueryTrim) return people;
+  const exactPerson = useMemo(() => {
+    if (!personQueryTrim) return null;
     const q = personQueryTrim.toLowerCase();
-    return people.filter((p) => p.name.toLowerCase().includes(q));
+    return people.find((p) => p.name.toLowerCase() === q) || null;
   }, [people, personQueryTrim]);
 
-  const canCreatePerson =
-    personQueryTrim.length > 0 &&
-    filteredPeople.length === 0 &&
-    !people.some(
-      (p) => p.name.toLowerCase() === personQueryTrim.toLowerCase()
-    );
+  const matchedPeople = useMemo(() => {
+    if (!personQueryTrim) return people;
+    return people
+      .map((p) => ({ person: p, score: personMatchScore(personQueryTrim, p.name) }))
+      .filter((x) => x.score >= 0)
+      .sort((a, b) => b.score - a.score)
+      .map((x) => x.person);
+  }, [people, personQueryTrim]);
+
+  const showCreateOption =
+    personQueryTrim.length > 0 && !exactPerson;
 
   const createPerson = useMutation({
     mutationFn: (name: string) =>
@@ -381,6 +388,8 @@ export function NewTransactionPage({
           value={currency}
           rate={exchangeRate}
           preferred={walletCodes}
+          open={currencyOpen}
+          onOpenChange={setCurrencyOpen}
           onChange={(code) => {
             setCurrency(code);
             setRateEdited(false);
@@ -395,10 +404,10 @@ export function NewTransactionPage({
               <CurrencyFlag code={selected.code} size={48} />
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-[17px] truncate">
-                  {tCurrency("label")}: {selected.name}
+                  {tCurrency("title")}
                 </div>
-                <div className="text-[13px] text-muted font-medium truncate mt-0.5">
-                  {selected.code} ·{" "}
+                <div className="text-[12px] text-muted font-medium truncate mt-0.5">
+                  {selected.name} · {selected.code} ·{" "}
                   {formatBalance(currencyBalance, locale, selected.code)}
                 </div>
               </div>
@@ -486,13 +495,19 @@ export function NewTransactionPage({
             onChange={(e) => setAmount(sanitizeAmount(e.target.value))}
             className={`w-full max-w-[300px] bg-transparent outline-none text-center text-[56px] font-bold tracking-[-0.05em] tabular-nums leading-none placeholder:text-muted ${accent.amount}`}
           />
-          <span
-            className={`text-[22px] font-semibold shrink-0 leading-none ${
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setCurrencyOpen(true);
+            }}
+            className={`text-[22px] font-semibold shrink-0 leading-none px-1.5 py-1 rounded-lg active:bg-surface ${
               amountNum > 0 ? accent.amount : "text-muted"
             }`}
+            aria-label={tCurrency("title")}
           >
             {currencySymbol(currency)}
-          </span>
+          </button>
         </div>
       </div>
 
@@ -637,62 +652,69 @@ export function NewTransactionPage({
                 <div className="text-center text-sm text-muted py-10">
                   {tCommon("loading")}
                 </div>
-              ) : canCreatePerson ? (
-                <div className="px-2 py-4 space-y-4">
-                  <div className="text-center text-[15px] text-foreground font-medium px-2">
-                    {tPeople("createConfirm", { name: personQueryTrim })}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 px-1">
-                    <button
-                      type="button"
-                      onClick={() => setPersonQuery("")}
-                      className="rounded-xl px-4 py-3 font-semibold text-muted-strong bg-background"
-                    >
-                      {tCommon("cancel")}
-                    </button>
+              ) : (
+                <>
+                  {showCreateOption && (
                     <button
                       type="button"
                       disabled={createPerson.isPending}
                       onClick={() => createPerson.mutate(personQueryTrim)}
-                      className="rounded-xl px-4 py-3 font-semibold text-white bg-primary disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left active:bg-background disabled:opacity-60"
                     >
-                      <UserPlus className="w-4 h-4" />
-                      {createPerson.isPending ? "…" : tPeople("create")}
-                    </button>
-                  </div>
-                </div>
-              ) : filteredPeople.length === 0 ? (
-                <div className="text-center text-sm text-muted py-10">
-                  {tPeople("empty")}
-                </div>
-              ) : (
-                filteredPeople.map((p) => {
-                  const active = personId === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => {
-                        setPersonId(p.id);
-                        closePersonSheet();
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left ${
-                        active ? "bg-primary-soft" : "active:bg-background"
-                      }`}
-                    >
-                      <Avatar name={p.name} color={p.avatarColor} size={44} />
+                      <span className="w-11 h-11 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0">
+                        <UserPlus className="w-5 h-5" />
+                      </span>
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-[15px] truncate">
-                          {p.name}
+                          {personQueryTrim}
                         </div>
-                        <div className="text-[12px] text-muted tabular-nums">
-                          {formatBalance(p.total, locale)}
+                        <div className="text-[12px] text-muted">
+                          {tPeople("create")}
                         </div>
                       </div>
-                      {active && <Check className="w-4 h-4 text-primary" />}
                     </button>
-                  );
-                })
+                  )}
+
+                  {matchedPeople.length === 0 && !showCreateOption ? (
+                    <div className="text-center text-sm text-muted py-10">
+                      {tPeople("empty")}
+                    </div>
+                  ) : (
+                    matchedPeople.map((p) => {
+                      const active = personId === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setPersonId(p.id);
+                            closePersonSheet();
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left ${
+                            active ? "bg-primary-soft" : "active:bg-background"
+                          }`}
+                        >
+                          <Avatar
+                            name={p.name}
+                            color={p.avatarColor}
+                            size={44}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-[15px] truncate">
+                              {p.name}
+                            </div>
+                            <div className="text-[12px] text-muted tabular-nums">
+                              {formatBalance(p.total, locale)}
+                            </div>
+                          </div>
+                          {active && (
+                            <Check className="w-4 h-4 text-primary" />
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </>
               )}
             </div>
           </div>

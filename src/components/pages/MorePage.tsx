@@ -5,6 +5,7 @@ import {
   LogOut,
   Settings,
   Shield,
+  Users,
   UserRound,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
@@ -20,6 +21,7 @@ export function MorePage() {
   const t = useTranslations("more");
   const tAuth = useTranslations("auth");
   const tNav = useTranslations("nav");
+  const tPeople = useTranslations("people");
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const { data: session } = useSession();
@@ -99,10 +101,23 @@ export function MorePage() {
 
       <div className="bg-card rounded-[22px] overflow-hidden shadow-card divide-y divide-line">
         <Link
-          href="/settings"
+          href="/people"
           className="flex items-center gap-3.5 px-4 py-4 active:bg-surface"
         >
           <span className="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5" />
+          </span>
+          <span className="flex-1 font-semibold text-[16px]">
+            {tPeople("title")}
+          </span>
+          <ChevronRight className="w-5 h-5 text-muted shrink-0" />
+        </Link>
+
+        <Link
+          href="/settings"
+          className="flex items-center gap-3.5 px-4 py-4 active:bg-surface"
+        >
+          <span className="w-11 h-11 rounded-full bg-surface text-muted-strong flex items-center justify-center shrink-0">
             <Settings className="w-5 h-5" />
           </span>
           <span className="flex-1 font-semibold text-[16px]">{t("settings")}</span>

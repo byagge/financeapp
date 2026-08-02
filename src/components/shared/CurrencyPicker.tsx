@@ -18,6 +18,8 @@ export function CurrencyPicker({
   onChange,
   compact,
   preferred,
+  open: openProp,
+  onOpenChange,
   children,
 }: {
   value: string;
@@ -26,6 +28,8 @@ export function CurrencyPicker({
   compact?: boolean;
   /** User wallet currencies — pinned at the top of the list. */
   preferred?: string[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   children?: (args: {
     selected: CurrencyInfo;
     open: () => void;
@@ -33,7 +37,13 @@ export function CurrencyPicker({
 }) {
   const t = useTranslations("currency");
   const locale = useLocale();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const controlled = openProp !== undefined;
+  const open = controlled ? Boolean(openProp) : internalOpen;
+  function setOpen(next: boolean) {
+    if (!controlled) setInternalOpen(next);
+    onOpenChange?.(next);
+  }
   const [q, setQ] = useState("");
   const keyboardInset = useKeyboardInset(open);
 
@@ -92,10 +102,14 @@ export function CurrencyPicker({
     setOpen(true);
   }
 
-  function pick(code: string) {
-    onChange(code);
+  function closeSheet() {
     setOpen(false);
     setQ("");
+  }
+
+  function pick(code: string) {
+    onChange(code);
+    closeSheet();
   }
 
   return (
@@ -134,13 +148,14 @@ export function CurrencyPicker({
             type="button"
             className="fixed inset-0 z-[100] bg-black/30"
             aria-label={t("close")}
-            onClick={() => setOpen(false)}
+            onClick={closeSheet}
           />
           <div
             className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-xl rounded-t-[24px] bg-card shadow-2xl flex flex-col animate-sheet pb-[max(0.5rem,env(safe-area-inset-bottom))]"
             style={{
               bottom: keyboardInset,
-              maxHeight: `min(75dvh, calc(100dvh - ${keyboardInset}px - 12px))`,
+              maxHeight: `min(92dvh, calc(100dvh - ${keyboardInset}px - 8px))`,
+              height: `min(92dvh, calc(100dvh - ${keyboardInset}px - 8px))`,
             }}
           >
             <div className="px-4 pt-3 pb-2 border-b border-line">

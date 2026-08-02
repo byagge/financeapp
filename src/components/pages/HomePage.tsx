@@ -1,11 +1,10 @@
 "use client";
 
-import { Settings } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { Link, useRouter } from "@/i18n/routing";
+import { useRouter } from "@/i18n/routing";
 import { BalanceCard } from "@/components/mobile/BalanceCard";
 import { PeriodPills } from "@/components/mobile/PeriodPills";
 import { QuickActions } from "@/components/mobile/QuickActions";
@@ -14,6 +13,7 @@ import { TransactionList } from "@/components/mobile/TransactionList";
 import { TransactionTable } from "@/components/desktop/TransactionTable";
 import { FullScreenLoader } from "@/components/shared/FullScreenLoader";
 import { TransactionSheet } from "@/components/shared/TransactionSheet";
+import { WeatherBadge } from "@/components/shared/WeatherBadge";
 import { useTransactions } from "@/hooks/useFinance";
 import {
   defaultPeriodFilter,
@@ -71,21 +71,15 @@ export function HomePage() {
     <div className="space-y-6 pb-4 animate-fade-in">
       <header className="flex items-start justify-between gap-3 pt-1">
         <div className="min-w-0">
-          <div className="text-[14px] text-muted-strong capitalize">
+          <div className="text-[13px] text-muted-strong capitalize">
             {formatHeaderDate(new Date(), locale)}
           </div>
-          <h1 className="mt-1.5 font-bold text-[26px] leading-[1.15] tracking-[-0.03em]">
+          <h1 className="mt-1 font-bold text-[18px] leading-[1.25] tracking-[-0.02em] text-foreground">
             {greeting}
             {firstName ? `, ${firstName}` : ""}!
           </h1>
         </div>
-        <Link
-          href="/more"
-          className="w-12 h-12 rounded-xl bg-card border border-line-strong flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(17,24,39,0.04)]"
-          aria-label={t("settings")}
-        >
-          <Settings className="w-5 h-5 text-muted-strong" strokeWidth={1.8} />
-        </Link>
+        <WeatherBadge />
       </header>
 
       <PeriodPills value={period} onChange={setPeriod} />

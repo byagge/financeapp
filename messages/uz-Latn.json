@@ -216,7 +216,10 @@
     "theme": "Mavzu",
     "themeSystem": "Tizim",
     "themeLight": "Yorugʻ",
-    "themeDark": "Qorongʻu"
+    "themeDark": "Qorongʻu",
+    "city": "Ob-havo shahri",
+    "cityAuto": "Avto (IP boʻyicha)",
+    "cityHint": "Oʻz shahringizni tanlang — IP baʼzan boshqa joyni koʻrsatadi"
   },
   "admin": {
     "title": "Admin-panel",
