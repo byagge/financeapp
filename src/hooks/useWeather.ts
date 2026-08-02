@@ -15,6 +15,8 @@ export type WeatherPayload = {
   names: Record<string, string>;
 };
 
+const CITY_EVENT = "finance:weather-city";
+
 function readStoredCity(): WeatherCityId {
   if (typeof window === "undefined") return "auto";
   try {
@@ -33,12 +35,22 @@ export function useWeatherCity() {
   useEffect(() => {
     setCityIdState(readStoredCity());
     setReady(true);
+    function sync() {
+      setCityIdState(readStoredCity());
+    }
+    window.addEventListener(CITY_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(CITY_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
   }, []);
 
   const setCityId = useCallback((next: WeatherCityId) => {
     setCityIdState(next);
     try {
       localStorage.setItem(WEATHER_CITY_KEY, next);
+      window.dispatchEvent(new Event(CITY_EVENT));
     } catch {
       /* ignore */
     }

@@ -48,7 +48,8 @@
     "peopleHint": "Tap a person to add a transaction",
     "currencySom": "Som",
     "tapCurrencies": "Tap to view by currency",
-    "settings": "Settings"
+    "settings": "Settings",
+    "weather": "Weather"
   },
   "period": {
     "label": "For which period?",

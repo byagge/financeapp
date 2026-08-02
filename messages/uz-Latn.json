@@ -48,7 +48,8 @@
     "peopleHint": "Amaliyot qoʻshish uchun odamga bosing",
     "currencySom": "Som",
     "tapCurrencies": "Bosing — valyuta boʻyicha koʻrish",
-    "settings": "Sozlamalar"
+    "settings": "Sozlamalar",
+    "weather": "Ob-havo"
   },
   "period": {
     "label": "Qaysi davr uchun?",
