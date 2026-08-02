@@ -100,13 +100,10 @@ export function SettingsPage() {
 
   const langLabel = localeNativeName[locale];
 
-  const cityDisplay =
-    cityId === "auto"
-      ? t("cityAuto")
-      : cityLabel(
-          WEATHER_CITIES.find((c) => c.id === cityId) || WEATHER_CITIES[0],
-          locale
-        );
+  const cityDisplay = cityLabel(
+    WEATHER_CITIES.find((c) => c.id === cityId) || WEATHER_CITIES[0],
+    locale
+  );
 
   const themeOptions: { id: ThemePreference; label: string }[] = [
     { id: "system", label: t("themeSystem") },
@@ -114,7 +111,7 @@ export function SettingsPage() {
     { id: "dark", label: t("themeDark") },
   ];
 
-  function pickCity(next: WeatherCityId) {
+  function pickCity(next: Exclude<WeatherCityId, "auto">) {
     setCityId(next);
     setCityOpen(false);
     qc.invalidateQueries({ queryKey: ["weather"] });
@@ -162,12 +159,7 @@ export function SettingsPage() {
             onClick={() => setCityOpen(true)}
             className="w-full flex items-center gap-3 px-4 py-4 text-left active:bg-surface"
           >
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-[15px]">{t("city")}</div>
-              <div className="text-[12px] text-muted mt-0.5">
-                {t("cityHint")}
-              </div>
-            </div>
+            <span className="flex-1 font-medium text-[15px]">{t("city")}</span>
             <span className="text-[14px] text-muted shrink-0 max-w-[40%] truncate">
               {cityDisplay}
             </span>
@@ -294,20 +286,8 @@ export function SettingsPage() {
           />
           <div className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-xl rounded-t-[24px] bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl animate-sheet">
             <div className="mx-auto w-10 h-1 rounded-full bg-line-strong mb-4" />
-            <div className="font-bold text-[18px] mb-1">{t("city")}</div>
-            <p className="text-[13px] text-muted-strong mb-4">{t("cityHint")}</p>
+            <div className="font-bold text-[18px] mb-4">{t("city")}</div>
             <div className="space-y-2 max-h-[55dvh] overflow-y-auto">
-              <button
-                type="button"
-                onClick={() => pickCity("auto")}
-                className={`w-full rounded-2xl py-3.5 px-4 font-semibold border text-left ${
-                  cityId === "auto"
-                    ? "bg-[#16A34A] text-white border-[#16A34A]"
-                    : "bg-background border-transparent text-foreground"
-                }`}
-              >
-                {t("cityAuto")}
-              </button>
               {WEATHER_CITIES.map((c) => {
                 const active = cityId === c.id;
                 return (
@@ -389,7 +369,9 @@ export function SettingsPage() {
                   )}
                 </button>
               </div>
-              {passError && <p className="text-sm text-[#EF4444]">{passError}</p>}
+              {passError && (
+                <p className="text-sm text-[#EF4444]">{passError}</p>
+              )}
               {passMsg && <p className="text-sm text-[#16A34A]">{passMsg}</p>}
               <button
                 type="submit"
@@ -419,12 +401,12 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative w-[51px] h-[31px] rounded-full transition-colors shrink-0 ${
+      className={`relative w-[48px] h-[28px] rounded-full transition-colors shrink-0 ${
         checked ? "bg-[#16A34A]" : "bg-line-strong"
       }`}
     >
       <span
-        className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] rounded-full bg-card shadow transition-transform ${
+        className={`absolute top-[3px] left-[3px] w-[22px] h-[22px] rounded-full bg-white shadow transition-transform ${
           checked ? "translate-x-[20px]" : "translate-x-0"
         }`}
       />

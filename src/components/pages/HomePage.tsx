@@ -74,7 +74,7 @@ export function HomePage() {
           <div className="text-[13px] text-muted-strong capitalize">
             {formatHeaderDate(new Date(), locale)}
           </div>
-          <h1 className="mt-1 font-semibold text-[16px] leading-[1.3] tracking-[-0.01em] text-foreground">
+          <h1 className="mt-1 font-semibold text-[17px] leading-snug tracking-[-0.015em] text-foreground">
             {greeting}
             {firstName ? `, ${firstName}` : ""}!
           </h1>

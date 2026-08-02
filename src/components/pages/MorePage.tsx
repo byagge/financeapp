@@ -117,7 +117,7 @@ export function MorePage() {
           href="/settings"
           className="flex items-center gap-3.5 px-4 py-4 active:bg-surface"
         >
-          <span className="w-11 h-11 rounded-full bg-transparent text-muted-strong flex items-center justify-center shrink-0">
+          <span className="w-11 h-11 rounded-full bg-primary/15 backdrop-blur-sm text-primary flex items-center justify-center shrink-0">
             <Settings className="w-5 h-5" strokeWidth={1.9} />
           </span>
           <span className="flex-1 font-semibold text-[16px]">{t("settings")}</span>

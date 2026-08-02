@@ -196,4 +196,30 @@ export function weatherKind(code: number): WeatherKind {
   return "cloudy";
 }
 
+/** OpenWeather icon id (01d / 01n …) from WMO weather code. */
+export function openWeatherIcon(code: number, isDay: boolean): string {
+  const d = isDay ? "d" : "n";
+  if (code === 0) return `01${d}`;
+  if (code === 1) return `02${d}`;
+  if (code === 2) return `03${d}`;
+  if (code === 3) return `04${d}`;
+  if (code === 45 || code === 48) return `50${d}`;
+  if ((code >= 51 && code <= 57) || code === 80) return `09${d}`;
+  if ((code >= 61 && code <= 67) || code === 81 || code === 82) return `10${d}`;
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return `13${d}`;
+  if (code >= 95) return `11${d}`;
+  return `03${d}`;
+}
+
+export function openWeatherIconUrl(icon: string) {
+  return `https://openweathermap.org/img/wn/${icon}@2x.png`;
+}
+
 export const WEATHER_CITY_KEY = "finance.weatherCity";
+export const DEFAULT_WEATHER_CITY: Exclude<WeatherCityId, "auto"> = "bishkek";
+
+export function normalizeWeatherCityId(raw: string | null | undefined): Exclude<WeatherCityId, "auto"> {
+  if (!raw || raw === "auto") return DEFAULT_WEATHER_CITY;
+  if (findCity(raw as WeatherCityId)) return raw as Exclude<WeatherCityId, "auto">;
+  return DEFAULT_WEATHER_CITY;
+}

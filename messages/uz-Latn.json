@@ -218,9 +218,7 @@
     "themeSystem": "Tizim",
     "themeLight": "Yorugʻ",
     "themeDark": "Qorongʻu",
-    "city": "Ob-havo shahri",
-    "cityAuto": "Avto (IP boʻyicha)",
-    "cityHint": "Oʻz shahringizni tanlang — IP baʼzan boshqa joyni koʻrsatadi"
+    "city": "Shahar"
   },
   "admin": {
     "title": "Admin-panel",

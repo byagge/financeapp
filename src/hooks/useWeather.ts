@@ -3,7 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import {
+  DEFAULT_WEATHER_CITY,
   WEATHER_CITY_KEY,
+  normalizeWeatherCityId,
   type WeatherCityId,
 } from "@/lib/weatherCities";
 
@@ -11,25 +13,26 @@ export type WeatherPayload = {
   temp: number;
   code: number;
   kind: "clear" | "cloudy" | "fog" | "rain" | "snow" | "storm";
+  isDay: boolean;
+  icon: string;
   cityId: string;
   names: Record<string, string>;
 };
 
 const CITY_EVENT = "finance:weather-city";
 
-function readStoredCity(): WeatherCityId {
-  if (typeof window === "undefined") return "auto";
+function readStoredCity(): Exclude<WeatherCityId, "auto"> {
+  if (typeof window === "undefined") return DEFAULT_WEATHER_CITY;
   try {
-    const raw = localStorage.getItem(WEATHER_CITY_KEY);
-    if (raw === "auto" || !raw) return "auto";
-    return raw as WeatherCityId;
+    return normalizeWeatherCityId(localStorage.getItem(WEATHER_CITY_KEY));
   } catch {
-    return "auto";
+    return DEFAULT_WEATHER_CITY;
   }
 }
 
 export function useWeatherCity() {
-  const [cityId, setCityIdState] = useState<WeatherCityId>("auto");
+  const [cityId, setCityIdState] =
+    useState<Exclude<WeatherCityId, "auto">>(DEFAULT_WEATHER_CITY);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -47,9 +50,10 @@ export function useWeatherCity() {
   }, []);
 
   const setCityId = useCallback((next: WeatherCityId) => {
-    setCityIdState(next);
+    const normalized = normalizeWeatherCityId(next);
+    setCityIdState(normalized);
     try {
-      localStorage.setItem(WEATHER_CITY_KEY, next);
+      localStorage.setItem(WEATHER_CITY_KEY, normalized);
       window.dispatchEvent(new Event(CITY_EVENT));
     } catch {
       /* ignore */
@@ -59,18 +63,19 @@ export function useWeatherCity() {
   return { cityId, setCityId, ready };
 }
 
-export function useWeather(cityId: WeatherCityId, enabled = true) {
+export function useWeather(
+  cityId: Exclude<WeatherCityId, "auto">,
+  enabled = true
+) {
   return useQuery({
     queryKey: ["weather", cityId],
     enabled,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
     queryFn: async (): Promise<WeatherPayload> => {
-      const qs =
-        cityId && cityId !== "auto"
-          ? `?city=${encodeURIComponent(cityId)}`
-          : "";
-      const res = await fetch(`/api/weather${qs}`);
+      const res = await fetch(
+        `/api/weather?city=${encodeURIComponent(cityId)}`
+      );
       if (!res.ok) throw new Error("weather");
       return res.json();
     },
